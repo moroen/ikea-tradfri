@@ -4,26 +4,35 @@ import sys
 import pytradfri
 
 import argparse
+import configparser
+import os.path
 
-IP = '192.168.1.129'
-KEY = 'NOT_REAL'
+def SaveConfig(args):
+    config["Gateway"] = {"ip": args.gateway, "key": args.key}
+    with open ('tradfri.ini', "w") as configfile:
+        config.write(configfile)
+
+
+config = configparser.ConfigParser()
+
+config["Gateway"] = {"ip": "UNDEF", "key": "UNDEF"}
+
+if os.path.exists("tradfri.ini"):
+    config.read('tradfri.ini')
 
 whiteTemps = {"cold":"f5faf6", "normal":"f1e0b5", "warm":"efd275"}
 
-api = pytradfri.coap_cli.api_factory(IP, KEY)
-gateway = pytradfri.gateway.Gateway(api)
-
 parser = argparse.ArgumentParser()
-parser.add_argument("--gateway", "-g", default=IP)
-parser.add_argument("--key", default=KEY)
-parser.add_argument("id")
-
+parser.add_argument("--gateway", "-g")
+parser.add_argument("--key")
+parser.add_argument("id", nargs='?', default=0)
 
 subparsers = parser.add_subparsers(dest="command")
 subparsers.required = True
 
 subparsers.add_parser("on")
 subparsers.add_parser("off")
+subparsers.add_parser("list")
 
 parser_level = subparsers.add_parser("level")
 parser_level.add_argument("value")
@@ -32,6 +41,25 @@ parser_colortemp = subparsers.add_parser("whitetemp")
 parser_colortemp.add_argument("value", choices=['cold', 'normal', 'warm'])
 
 args = parser.parse_args()
+
+if args.gateway != None:
+    config["Gateway"]["ip"] = args.gateway
+    SaveConfig(args)
+
+if args.key != None:
+    config["Gateway"]["key"] = args.key
+    SaveConfig(args)
+
+if config["Gateway"]["ip"]=="UNDEF":
+    print("Gateway not set. Use --gateway to specify")
+    quit()
+
+if config["Gateway"]["key"]=="UNDEF":
+    print("Key not set. Use --key to specify")
+    quit()
+
+api = pytradfri.coap_cli.api_factory(config["Gateway"]["ip"], config["Gateway"]["key"])
+gateway = pytradfri.gateway.Gateway(api)
 
 device = gateway.get_device(int(args.id))
 
@@ -46,3 +74,8 @@ if args.command == "level":
 
 if args.command == "whitetemp":
     device.light_control.set_hex_color(whiteTemps[args.value])
+
+if args.command == "list":
+    devicesList = gateway.get_devices()
+    for aDevice in devicesList:
+        print(aDevice)
