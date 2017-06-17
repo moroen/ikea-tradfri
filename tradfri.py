@@ -1,15 +1,23 @@
 #!/usr/bin/env python3
 
 import sys
-import pytradfri
+from pytradfri import Gateway
+from pytradfri.api.libcoap_api import api_factory
 
 import argparse
 import configparser
-import os.path
+import os
+
+dir_path = os.path.dirname(os.path.realpath(__file__))
+
+iniFile = "{0}/tradfri.ini".format(dir_path)
+
+print (iniFile)
 
 def SaveConfig(args):
     config["Gateway"] = {"ip": args.gateway, "key": args.key}
-    with open ('tradfri.ini', "w") as configfile:
+
+    with open (iniFile, "w") as configfile:
         config.write(configfile)
 
 
@@ -20,8 +28,8 @@ config = configparser.ConfigParser()
 
 config["Gateway"] = {"ip": "UNDEF", "key": "UNDEF"}
 
-if os.path.exists("tradfri.ini"):
-    config.read('tradfri.ini')
+if os.path.exists(iniFile):
+    config.read(iniFile)
 
 whiteTemps = {"cold":"f5faf6", "normal":"f1e0b5", "warm":"efd275"}
 
@@ -62,26 +70,27 @@ if config["Gateway"]["key"]=="UNDEF":
     print("Key not set. Use --key to specify")
     quit()
 
-api = pytradfri.coap_cli.api_factory(config["Gateway"]["ip"], config["Gateway"]["key"])
-gateway = pytradfri.gateway.Gateway(api)
+api = api_factory(config["Gateway"]["ip"], config["Gateway"]["key"])
+gateway = Gateway()
 
-device = gateway.get_device(int(args.id))
+device = api(gateway.get_device(args.id))
 
 if args.command == "on":
-    device.light_control.set_state(True)
+    api(device.light_control.set_state(True))
 
 if args.command == "off":
-    device.light_control.set_state(False)
+    api(device.light_control.set_state(False))
 
 if args.command == "level":
-    device.light_control.set_dimmer(int(args.value))
+    api(device.light_control.set_dimmer(int(args.value)))
 
 if args.command == "whitetemp":
-    device.light_control.set_hex_color(whiteTemps[args.value])
+    api(device.light_control.set_hex_color(whiteTemps[args.value]))
 
 if args.command == "list":
-    devicesList = gateway.get_devices()
-    for aDevice in devicesList:
+    devices = api(*api(gateway.get_devices()))
+
+    for aDevice in devices:
         print(aDevice)
 
 if args.command == "test":
