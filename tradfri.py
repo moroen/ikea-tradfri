@@ -1,35 +1,34 @@
 #!/usr/bin/env python3
 
-import sys
-from pytradfri import Gateway
-from pytradfri.api.libcoap_api import api_factory
-
 import argparse
 import configparser
 import os
 
-dir_path = os.path.dirname(os.path.realpath(__file__))
+from pytradfri import Gateway
+from pytradfri.api.libcoap_api import api_factory
 
-iniFile = "{0}/tradfri.ini".format(dir_path)
-
-print (iniFile)
-
-def SaveConfig(args):
-    config["Gateway"] = {"ip": args.gateway, "key": args.key}
-
-    with open (iniFile, "w") as configfile:
-        config.write(configfile)
-
-
-def change_listener(device):
-  print(device.name + " is now " + str(device.light_control.lights[0].state))
+INIFILE = "{0}/tradfri.ini".format(os.path.dirname(os.path.realpath(__file__)))
 
 config = configparser.ConfigParser()
 
-config["Gateway"] = {"ip": "UNDEF", "key": "UNDEF"}
+def SaveConfig(args):
 
-if os.path.exists(iniFile):
-    config.read(iniFile)
+    if os.path.exists(INIFILE):
+        config.read(INIFILE)
+    else: 
+        config["Gateway"] = {"ip": "UNDEF", "key": "UNDEF"}
+
+    if args.gateway != None:
+        config["Gateway"]["ip"] = args.gateway
+
+    if args.key != None:
+        config["Gateway"]["key"] = args.key
+    
+    with open(INIFILE, "w") as configfile:
+        config.write(configfile)
+
+def change_listener(device):
+    print(device.name + " is now " + str(device.light_control.lights[0].state))
 
 whiteTemps = {"cold":"f5faf6", "normal":"f1e0b5", "warm":"efd275"}
 
@@ -54,21 +53,7 @@ parser_colortemp.add_argument("value", choices=['cold', 'normal', 'warm'])
 
 args = parser.parse_args()
 
-if args.gateway != None:
-    config["Gateway"]["ip"] = args.gateway
-    SaveConfig(args)
-
-if args.key != None:
-    config["Gateway"]["key"] = args.key
-    SaveConfig(args)
-
-if config["Gateway"]["ip"]=="UNDEF":
-    print("Gateway not set. Use --gateway to specify")
-    quit()
-
-if config["Gateway"]["key"]=="UNDEF":
-    print("Key not set. Use --key to specify")
-    quit()
+SaveConfig(args)
 
 api = api_factory(config["Gateway"]["ip"], config["Gateway"]["key"])
 gateway = Gateway()
@@ -94,7 +79,10 @@ if args.command == "list":
         print(aDevice)
 
 if args.command == "test":
-    devices = gateway.get_devices()
+    devices = api(*api(gateway.get_devices()))
     lights = [dev for dev in devices if dev.has_light_control]
 
     lights[0].observe(change_listener)
+
+if args.command == "me":
+    pass
