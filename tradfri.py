@@ -38,7 +38,7 @@ parser.add_argument("--key")
 parser.add_argument("id", nargs='?', default=0)
 
 subparsers = parser.add_subparsers(dest="command")
-subparsers.required = True
+subparsers.required = False
 
 subparsers.add_parser("on")
 subparsers.add_parser("off")
@@ -54,6 +54,18 @@ parser_colortemp.add_argument("value", choices=['cold', 'normal', 'warm'])
 args = parser.parse_args()
 
 SaveConfig(args)
+
+configOk = True
+if config["Gateway"]["ip"] == "UNDEF":
+    print("Error: Gateway not set. Specify with --gateway")
+    configOk = False
+
+if config["Gateway"]["key"] == "UNDEF":
+    print("Error: Key not set. Specify with --key")
+    configOk = False
+
+if not configOk:
+    quit()
 
 api = api_factory(config["Gateway"]["ip"], config["Gateway"]["key"])
 gateway = Gateway()
