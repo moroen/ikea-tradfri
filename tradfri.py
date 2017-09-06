@@ -87,8 +87,14 @@ if args.command == "whitetemp":
 if args.command == "list":
     devices = api(*api(gateway.get_devices()))
 
+    print ("Devices")
     for aDevice in devices:
         print(aDevice)
+
+    print("\nGroups")
+    groups = api(*api(gateway.get_groups()))
+    for aGroup in groups:
+        print(aGroup)
 
 if args.command == "test":
     devices = api(*api(gateway.get_devices()))
