@@ -5,11 +5,20 @@ import configparser
 import os
 
 from pytradfri import Gateway
-from pytradfri.api.libcoap_api import api_factory
+from pytradfri.api.libcoap_api import APIFactory
 
 INIFILE = "{0}/tradfri.ini".format(os.path.dirname(os.path.realpath(__file__)))
 
 config = configparser.ConfigParser()
+
+def hexToRgb(hex):
+    rgb = {}
+
+    rgb["red"] = int(hex[:2], 16)
+    rgb["green"] = int(hex[2:4],16)
+    rgb["blue"] = int(hex[-2:], 16)
+
+    return rgb
 
 def SaveConfig(args):
 
@@ -43,13 +52,20 @@ subparsers.required = False
 subparsers.add_parser("on")
 subparsers.add_parser("off")
 subparsers.add_parser("list")
-subparsers.add_parser("test")
+subparsers.add_parser("showhex")
+subparsers.add_parser("generate")
 
 parser_level = subparsers.add_parser("level")
 parser_level.add_argument("value")
 
 parser_colortemp = subparsers.add_parser("whitetemp")
 parser_colortemp.add_argument("value", choices=['cold', 'normal', 'warm'])
+
+parser_hex = subparsers.add_parser("hex")
+parser_hex.add_argument("value")
+
+parser_rgb = subparsers.add_parser("rgb")
+parser_rgb.add_argument("value")
 
 args = parser.parse_args()
 
@@ -67,7 +83,17 @@ if config["Gateway"]["key"] == "UNDEF":
 if not configOk:
     quit()
 
-api = api_factory(config["Gateway"]["ip"], config["Gateway"]["key"])
+
+if args.command == "generate":
+    print("Generate")
+    api_factory = APIFactory(config["Gateway"]["ip"])
+    psk = api_factory.generate_psk("ugugg")
+    print('Generated PSK: ', psk)
+    quit()
+    
+
+api_factory = APIFactory(config["Gateway"]["ip"], config["Credentials"]["ident"],config["Credentials"]["psk"])
+api = api_factory.request
 gateway = Gateway()
 
 device = api(gateway.get_device(args.id))
@@ -85,22 +111,33 @@ if args.command == "whitetemp":
     api(device.light_control.set_hex_color(whiteTemps[args.value]))
 
 if args.command == "list":
-    devices = api(*api(gateway.get_devices()))
+    devices = api(api(gateway.get_devices()))
 
     print ("Devices")
     for aDevice in devices:
         print(aDevice)
 
     print("\nGroups")
-    groups = api(*api(gateway.get_groups()))
+    groups = api(api(gateway.get_groups()))
     for aGroup in groups:
         print(aGroup)
 
-if args.command == "test":
-    devices = api(*api(gateway.get_devices()))
-    lights = [dev for dev in devices if dev.has_light_control]
+if args.command == "hex":
+    api(device.light_control.set_hex_color(args.value))
+    
+if args.command == "rgb":
+    rgb = hexToRgb(args.value)
+    api(device.light_control.set_rgb_color(rgb["red"], rgb["green"], rgb["blue"]))
 
-    lights[0].observe(change_listener)
+if args.command == "showhex":
+    print(device.light_control.lights[0].hex_color)
+
+if args.command == "test":
+    #   api(device.light_control.set_rgb_color(0,0,))
+    # print(device.light_control.lights[0].hex_color)
+    api(device.light_control.set_kelvin_color(1667))
+    # print(device.light_control.min_kelvin)
 
 if args.command == "me":
     pass
+
