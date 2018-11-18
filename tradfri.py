@@ -70,8 +70,11 @@ subparsers.required = False
 parser_config = subparsers.add_parser("config")
 parser_config.add_argument("IP")
 parser_config.add_argument("KEY")
-subparsers.add_parser("on")
-subparsers.add_parser("off")
+subparsers.add_parser("on").add_argument("ID")
+
+
+subparsers.add_parser("off").add_argument("ID")
+
 subparsers.add_parser("list")
 subparsers.add_parser("showhex")
 
@@ -95,7 +98,8 @@ api_factory = APIFactory(hostConfig["Gateway"], hostConfig["Identity"],hostConfi
 api = api_factory.request
 gateway = Gateway()
 
-# device = api(gateway.get_device(args.id))
+if not args.ID is None: 
+    device = api(gateway.get_device(args.ID))
 
 if args.command == "on":
     api(device.light_control.set_state(True))
