@@ -3,13 +3,49 @@
 import argparse
 import configparser
 import os
+import uuid,json
 
 from pytradfri import Gateway
 from pytradfri.api.libcoap_api import APIFactory
 
-INIFILE = "{0}/tradfri.ini".format(os.path.dirname(os.path.realpath(__file__)))
+# INIFILE = "{0}/tradfri.ini".format(os.path.dirname(os.path.realpath(__file__)))
 
-config = configparser.ConfigParser()
+# config = configparser.ConfigParser()
+
+hostConfig = {}
+
+CONFIGFILE = "{0}/config.json".format(os.path.dirname(os.path.realpath(__file__)))
+
+
+def GetConfig(args=None):
+    hostConfig = {}
+
+    if os.path.isfile(CONFIGFILE):
+        with open(CONFIGFILE) as json_data_file:
+            hostConfig = json.load(json_data_file)
+        return hostConfig
+    else:
+        if args.command=="config":
+            print("Create config")
+            identity = uuid.uuid4().hex
+            api_factory = APIFactory(host=args.IP, psk_id=identity)
+
+            psk = api_factory.generate_psk(args.KEY)
+            hostConfig["Gateway"] = args.IP
+            hostConfig["Identity"] = identity
+            hostConfig["Passkey"] = psk
+
+            with open('config.json', 'w') as outfile:
+                json.dump(hostConfig, outfile)
+
+            print("Config created!")
+
+            return hostConfig
+
+        else:
+            print ("Fatal: No config.json found")
+            exit()
+
 
 def hexToRgb(hex):
     rgb = {}
@@ -20,21 +56,6 @@ def hexToRgb(hex):
 
     return rgb
 
-def SaveConfig(args):
-
-    if os.path.exists(INIFILE):
-        config.read(INIFILE)
-    else: 
-        config["Gateway"] = {"ip": "UNDEF", "key": "UNDEF"}
-
-    if args.gateway != None:
-        config["Gateway"]["ip"] = args.gateway
-
-    if args.key != None:
-        config["Gateway"]["key"] = args.key
-    
-    with open(INIFILE, "w") as configfile:
-        config.write(configfile)
 
 def change_listener(device):
     print(device.name + " is now " + str(device.light_control.lights[0].state))
@@ -42,18 +63,17 @@ def change_listener(device):
 whiteTemps = {"cold":"f5faf6", "normal":"f1e0b5", "warm":"efd275"}
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--gateway", "-g")
-parser.add_argument("--key")
-parser.add_argument("id", nargs='?', default=0)
 
 subparsers = parser.add_subparsers(dest="command")
 subparsers.required = False
 
+parser_config = subparsers.add_parser("config")
+parser_config.add_argument("IP")
+parser_config.add_argument("KEY")
 subparsers.add_parser("on")
 subparsers.add_parser("off")
 subparsers.add_parser("list")
 subparsers.add_parser("showhex")
-subparsers.add_parser("generate")
 
 parser_level = subparsers.add_parser("level")
 parser_level.add_argument("value")
@@ -68,35 +88,14 @@ parser_rgb = subparsers.add_parser("rgb")
 parser_rgb.add_argument("value")
 
 args = parser.parse_args()
+  
+hostConfig=GetConfig(args)
 
-SaveConfig(args)
-
-configOk = True
-if config["Gateway"]["ip"] == "UNDEF":
-    print("Error: Gateway not set. Specify with --gateway")
-    configOk = False
-
-if config["Gateway"]["key"] == "UNDEF":
-    print("Error: Key not set. Specify with --key")
-    configOk = False
-
-if not configOk:
-    quit()
-
-
-if args.command == "generate":
-    print("Generate")
-    api_factory = APIFactory(config["Gateway"]["ip"])
-    psk = api_factory.generate_psk("ugugg")
-    print('Generated PSK: ', psk)
-    quit()
-    
-
-api_factory = APIFactory(config["Gateway"]["ip"], config["Credentials"]["ident"],config["Credentials"]["psk"])
+api_factory = APIFactory(hostConfig["Gateway"], hostConfig["Identity"],hostConfig["Passkey"])
 api = api_factory.request
 gateway = Gateway()
 
-device = api(gateway.get_device(args.id))
+# device = api(gateway.get_device(args.id))
 
 if args.command == "on":
     api(device.light_control.set_state(True))
