@@ -20,31 +20,29 @@ CONFIGFILE = "{0}/config.json".format(os.path.dirname(os.path.realpath(__file__)
 def GetConfig(args=None):
     hostConfig = {}
 
-    if os.path.isfile(CONFIGFILE):
+ 
+    if args.command=="config":
+        identity = uuid.uuid4().hex
+        api_factory = APIFactory(host=args.IP, psk_id=identity)
+
+        psk = api_factory.generate_psk(args.KEY)
+        hostConfig["Gateway"] = args.IP
+        hostConfig["Identity"] = identity
+        hostConfig["Passkey"] = psk
+
+        with open('config.json', 'w') as outfile:
+            json.dump(hostConfig, outfile)
+
+        print("Config created!")
+
+        return hostConfig
+    elif os.path.isfile(CONFIGFILE):
         with open(CONFIGFILE) as json_data_file:
             hostConfig = json.load(json_data_file)
         return hostConfig
     else:
-        if args.command=="config":
-            print("Create config")
-            identity = uuid.uuid4().hex
-            api_factory = APIFactory(host=args.IP, psk_id=identity)
-
-            psk = api_factory.generate_psk(args.KEY)
-            hostConfig["Gateway"] = args.IP
-            hostConfig["Identity"] = identity
-            hostConfig["Passkey"] = psk
-
-            with open('config.json', 'w') as outfile:
-                json.dump(hostConfig, outfile)
-
-            print("Config created!")
-
-            return hostConfig
-
-        else:
-            print ("Fatal: No config.json found")
-            exit()
+        print ("Fatal: No config.json found")
+        exit()
 
 
 def hexToRgb(hex):
@@ -56,6 +54,12 @@ def hexToRgb(hex):
 
     return rgb
 
+
+def setDeviceState(device, state):
+    if device.has_light_control:
+        api(device.light_control.set_state(state))
+    elif device.has_socket_control:
+        api(device.socket_control.set_state(state))
 
 def change_listener(device):
     print(device.name + " is now " + str(device.light_control.lights[0].state))
@@ -98,15 +102,17 @@ api_factory = APIFactory(hostConfig["Gateway"], hostConfig["Identity"],hostConfi
 api = api_factory.request
 gateway = Gateway()
 
-if not args.ID is None: 
+try:
     device = api(gateway.get_device(args.ID))
+except AttributeError:
+    pass
 
 if args.command == "on":
-    api(device.light_control.set_state(True))
-
+    setDeviceState(device, True)
+    
 if args.command == "off":
-    api(device.light_control.set_state(False))
-
+    setDeviceState(device, False)
+    
 if args.command == "level":
     api(device.light_control.set_dimmer(int(args.value)))
 
@@ -116,11 +122,27 @@ if args.command == "whitetemp":
 if args.command == "list":
     devices = api(api(gateway.get_devices()))
 
-    print ("Devices")
-    for aDevice in devices:
-        print(aDevice)
+    outlets = []
+    others = []
 
-    print("\nGroups")
+    print ("Lights:")
+    for aDevice in devices:
+        if aDevice.has_light_control:
+            print("{0}: {1} ({2}) - {3}".format(aDevice.id, aDevice.name, aDevice.device_info.model_number, aDevice.light_control.lights[0].state))
+        elif aDevice.has_socket_control:
+            outlets.append(aDevice)
+        else:
+            others.append(aDevice)
+
+    print("\nSockets:")
+    for aDevice in outlets:
+        print("{0}: {1} ({2}) - {3}".format(aDevice.id, aDevice.name, aDevice.device_info.model_number, aDevice.socket_control.sockets[0].state))
+
+    print ("\nDevices:")
+    for aDevice in others:
+            print("{0}: {1} ({2})".format(aDevice.id, aDevice.name, aDevice.device_info.model_number))
+
+    print("\nGroups:")
     groups = api(api(gateway.get_groups()))
     for aGroup in groups:
         print(aGroup)
