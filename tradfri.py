@@ -10,7 +10,7 @@ from pytradfri.api.aiocoap_api import APIFactory
 
 import asyncio
 import aiocoap, logging
-import cli
+from tradfri_api import cli, devices
 
 # INIFILE = "{0}/tradfri.ini".format(os.path.dirname(os.path.realpath(__file__)))
 
@@ -50,32 +50,24 @@ def GetConfig(args=None):
 
 
 async def listDevices(api, gateway):
-    devices = await api(await api(gateway.get_devices()))
-
-    outlets = []
-    others = []
-
+    lights, outlets, groups, others = await devices.getDevices(api, gateway)
     print ("Lights:")
-    for aDevice in sorted(devices, key=lambda device: device.id):
-        if aDevice.has_light_control:
-            print("{0}: {1} ({2}) - {3}".format(aDevice.id, aDevice.name, aDevice.device_info.model_number, aDevice.light_control.lights[0].state))
-        elif aDevice.has_socket_control:
-            outlets.append(aDevice)
-        else:
-            others.append(aDevice)
-
+    for aDevice in lights:
+        print("{0}: {1} ({2}) - {3}".format(aDevice.id, aDevice.name, aDevice.device_info.model_number, aDevice.light_control.lights[0].state))
+        
     print("\nSockets:")
-    for aDevice in sorted(outlets, key=lambda device: device.id):
+    for aDevice in outlets:
         print("{0}: {1} ({2}) - {3}".format(aDevice.id, aDevice.name, aDevice.device_info.model_number, aDevice.socket_control.sockets[0].state))
 
     print ("\nDevices:")
-    for aDevice in sorted(others, key=lambda device: device.id):
+    for aDevice in others:
             print("{0}: {1} ({2})".format(aDevice.id, aDevice.name, aDevice.device_info.model_number))
 
     print("\nGroups:")
-    groups = await api(await api(gateway.get_groups()))
     for aGroup in groups:
         print(aGroup)
+    return
+    
 
 def hexToRgb(hex):
     rgb = {}
