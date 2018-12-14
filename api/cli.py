@@ -1,5 +1,15 @@
 import argparse
 
+def check_level(value):
+    try:
+        value = int(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError("Invalid level value")
+    if 0 <= value <= 254:
+        return value
+    else:
+        raise argparse.ArgumentTypeError("Invalid level value")
+
 def getArgs():
     parser = argparse.ArgumentParser()
 
@@ -18,7 +28,8 @@ def getArgs():
     subparsers.add_parser("showhex")
 
     parser_level = subparsers.add_parser("level")
-    parser_level.add_argument("value")
+    parser_level.add_argument("ID")
+    parser_level.add_argument("value", type=check_level)
 
     parser_colortemp = subparsers.add_parser("whitetemp")
     parser_colortemp.add_argument("value", choices=['cold', 'normal', 'warm'])

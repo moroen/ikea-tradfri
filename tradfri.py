@@ -10,7 +10,9 @@ from pytradfri.api.aiocoap_api import APIFactory
 
 import asyncio
 import aiocoap, logging
-from tradfri_api import cli, devices
+from api import cli, devices, config, console
+from api.config import api, gateway
+
 
 # INIFILE = "{0}/tradfri.ini".format(os.path.dirname(os.path.realpath(__file__)))
 
@@ -20,53 +22,7 @@ hostConfig = {}
 
 logging.basicConfig(level=logging.FATAL)
 
-def GetConfig(args=None):
-    hostConfig = {}
 
-    CONFIGFILE = "{0}/config.json".format(os.path.dirname(os.path.realpath(__file__)))
- 
-    if args.command=="config":
-        identity = uuid.uuid4().hex
-        api_factory = APIFactory(host=args.IP, psk_id=identity)
-
-        psk = api_factory.generate_psk(args.KEY)
-        hostConfig["Gateway"] = args.IP
-        hostConfig["Identity"] = identity
-        hostConfig["Passkey"] = psk
-
-        with open('config.json', 'w') as outfile:
-            json.dump(hostConfig, outfile)
-
-        print("Config created!")
-
-        return hostConfig
-    elif os.path.isfile(CONFIGFILE):
-        with open(CONFIGFILE) as json_data_file:
-            hostConfig = json.load(json_data_file)
-        return hostConfig
-    else:
-        print ("Fatal: No config.json found")
-        exit()
-
-
-async def listDevices(api, gateway):
-    lights, outlets, groups, others = await devices.getDevices(api, gateway)
-    print ("Lights:")
-    for aDevice in lights:
-        print("{0}: {1} ({2}) - {3}".format(aDevice.id, aDevice.name, aDevice.device_info.model_number, aDevice.light_control.lights[0].state))
-        
-    print("\nSockets:")
-    for aDevice in outlets:
-        print("{0}: {1} ({2}) - {3}".format(aDevice.id, aDevice.name, aDevice.device_info.model_number, aDevice.socket_control.sockets[0].state))
-
-    print ("\nDevices:")
-    for aDevice in others:
-            print("{0}: {1} ({2})".format(aDevice.id, aDevice.name, aDevice.device_info.model_number))
-
-    print("\nGroups:")
-    for aGroup in groups:
-        print(aGroup)
-    return
     
 
 def hexToRgb(hex):
@@ -79,18 +35,15 @@ def hexToRgb(hex):
     return rgb
 
 
-async def setDeviceState(api, device, state):
-    if device.has_light_control:
-        await api(device.light_control.set_state(state))
-    elif device.has_socket_control:
-        await api(device.socket_control.set_state(state))
+
 
 
 
 # whiteTemps = {"cold":"f5faf6", "normal":"f1e0b5", "warm":"efd275"}
 
 async def run(args):
-    hostConfig=GetConfig(args)
+    
+    hostConfig=config.getConfig(args)
 
     api_factory = APIFactory(hostConfig["Gateway"], hostConfig["Identity"],hostConfig["Passkey"])
     api = api_factory.request
@@ -101,28 +54,21 @@ async def run(args):
     # devices = await api(devices_commands)
     
    
-
-   
-
-    try:
-        device = await api(gateway.get_device(args.ID))
-    except AttributeError:
-        pass
-
     if args.command == "on":
-        await setDeviceState(api, device, True)
+        await devices.setDeviceState(api, gateway, args.ID, True)
         
     if args.command == "off":
-        await setDeviceState(api, device, False)
+        await devices.setDeviceState(api, gateway, args.ID,
+         False)
         
-    # if args.command == "level":
-    #     api(device.light_control.set_dimmer(int(args.value)))
+    if args.command == "level":
+         await devices.setDeviceLevel(api, gateway, args.ID, args.value)
 
     # if args.command == "whitetemp":
     #     api(device.light_control.set_hex_color(whiteTemps[args.value]))
 
     if args.command == "list":
-        await listDevices(api, gateway)
+        await console.listDevices(api, gateway)
 
     # if args.command == "hex":
     #     api(device.light_control.set_hex_color(args.value))
