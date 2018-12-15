@@ -2,16 +2,16 @@
 
 import argparse
 import configparser
-import os
+import os, signal
 import uuid,json
 
 from pytradfri import Gateway
 from pytradfri.api.aiocoap_api import APIFactory
 
-import asyncio
+import asyncio, functools
 import aiocoap, logging
 from api import cli, devices, config, console
-from api.config import api, gateway
+from api import server as Server
 
 
 # INIFILE = "{0}/tradfri.ini".format(os.path.dirname(os.path.realpath(__file__)))
@@ -53,6 +53,8 @@ async def run(args):
     # devices_commands = await api(devices_command)
     # devices = await api(devices_commands)
     
+    if args.command == "server":
+        await Server.server()
    
     if args.command == "on":
         await devices.setDeviceState(api, gateway, args.ID, True)
@@ -91,6 +93,27 @@ async def run(args):
 
     await api_factory.shutdown()
 
+def ask_exit(signame):
+    print("Received signal %s: exiting" % signame)
+    loop.stop()
+
 if __name__ == "__main__":
     args = cli.getArgs()
-    asyncio.get_event_loop().run_until_complete(run(args))
+    if args.command == "server":
+        future = asyncio.Future()
+        loop = asyncio.get_event_loop()
+        loop.create_task(Server.server())
+
+        for signame in {'SIGINT', 'SIGTERM'}:
+            loop.add_signal_handler(
+                getattr(signal, signame),
+                functools.partial(ask_exit, signame))
+
+        try:
+            loop.run_forever()
+        except KeyboardInterrupt:
+            print("Received exit, exiting")
+        
+    else:
+        asyncio.get_event_loop().run_until_complete(run(args))
+    

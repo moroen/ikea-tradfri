@@ -19,10 +19,11 @@ def getArgs():
     parser_config = subparsers.add_parser("config")
     parser_config.add_argument("IP")
     parser_config.add_argument("KEY")
+
     subparsers.add_parser("on").add_argument("ID")
-
-
     subparsers.add_parser("off").add_argument("ID")
+
+    subparsers.add_parser("server")
 
     subparsers.add_parser("list")
     subparsers.add_parser("showhex")
