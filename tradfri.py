@@ -11,19 +11,11 @@ from pytradfri.api.aiocoap_api import APIFactory
 import asyncio, functools
 import aiocoap, logging
 from api import cli, devices, config, console
-from api import server as Server
-
-
-# INIFILE = "{0}/tradfri.ini".format(os.path.dirname(os.path.realpath(__file__)))
-
-# config = configparser.ConfigParser()
 
 hostConfig = {}
 
 logging.basicConfig(level=logging.FATAL)
-
-
-    
+ 
 
 def hexToRgb(hex):
     rgb = {}
@@ -43,7 +35,7 @@ def hexToRgb(hex):
 
 async def run(args):
     
-    hostConfig=config.getConfig(args)
+    hostConfig=await config.getConfig(args)
 
     api_factory = APIFactory(hostConfig["Gateway"], hostConfig["Identity"],hostConfig["Passkey"])
     api = api_factory.request
@@ -54,6 +46,7 @@ async def run(args):
     # devices = await api(devices_commands)
     
     if args.command == "server":
+        from api import server as Server
         await Server.server()
    
     if args.command == "on":
@@ -100,6 +93,7 @@ def ask_exit(signame):
 if __name__ == "__main__":
     args = cli.getArgs()
     if args.command == "server":
+        from api import server as Server
         future = asyncio.Future()
         loop = asyncio.get_event_loop()
         loop.create_task(Server.server())
