@@ -14,7 +14,7 @@ from api import cli, devices, config, console
 
 hostConfig = {}
 
-logging.basicConfig(level=logging.FATAL)
+# logging.basicConfig(level=logging.FATAL)
  
 
 def hexToRgb(hex):
@@ -45,10 +45,6 @@ async def run(args):
     # devices_commands = await api(devices_command)
     # devices = await api(devices_commands)
     
-    if args.command == "server":
-        from api import server as Server
-        await Server.server()
-   
     if args.command == "on":
         await devices.setDeviceState(api, gateway, args.ID, True)
         
@@ -86,28 +82,21 @@ async def run(args):
 
     await api_factory.shutdown()
 
-def ask_exit(signame):
-    print("Received signal %s: exiting" % signame)
-    loop.stop()
-
 if __name__ == "__main__":
     args = cli.getArgs()
     if args.command == "server":
         from api import server as Server
+        
+        server = Server.TradfriServer()
+
         future = asyncio.Future()
         loop = asyncio.get_event_loop()
-        loop.create_task(Server.server())
-
-        for signame in {'SIGINT', 'SIGTERM'}:
-            loop.add_signal_handler(
-                getattr(signal, signame),
-                functools.partial(ask_exit, signame))
+        loop.create_task(server.start())
 
         try:
             loop.run_forever()
         except KeyboardInterrupt:
             print("Received exit, exiting")
-        
     else:
         asyncio.get_event_loop().run_until_complete(run(args))
     

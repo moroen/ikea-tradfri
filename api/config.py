@@ -14,26 +14,27 @@ async def getConfig(args=None):
 
     CONFIGFILE = "{0}/gateway.json".format(appdirs.user_config_dir(appname="tradfri"))
  
-    if args.command=="config":
-        identity = uuid.uuid4().hex
-        api_factory = APIFactory(host=args.IP, psk_id=identity)
+    if args != None:
+        if args.command=="config":
+            identity = uuid.uuid4().hex
+            api_factory = APIFactory(host=args.IP, psk_id=identity)
 
-        psk = await api_factory.generate_psk(args.KEY)
-        hostConfig["Gateway"] = args.IP
-        hostConfig["Identity"] = identity
-        hostConfig["Passkey"] = psk
+            psk = await api_factory.generate_psk(args.KEY)
+            hostConfig["Gateway"] = args.IP
+            hostConfig["Identity"] = identity
+            hostConfig["Passkey"] = psk
 
-        CONFDIR = appdirs.user_config_dir(appname="tradfri")
-        if not os.path.exists(CONFDIR):
-            os.makedirs(CONFDIR)
+            CONFDIR = appdirs.user_config_dir(appname="tradfri")
+            if not os.path.exists(CONFDIR):
+                os.makedirs(CONFDIR)
 
-        with open(CONFIGFILE, 'w') as outfile:
-            json.dump(hostConfig, outfile)
+            with open(CONFIGFILE, 'w') as outfile:
+                json.dump(hostConfig, outfile)
 
-        print("Config created!")
+            print("Config created!")
+            return hostConfig
 
-        return hostConfig
-    elif os.path.isfile(CONFIGFILE):
+    if os.path.isfile(CONFIGFILE):
         with open(CONFIGFILE) as json_data_file:
             hostConfig = json.load(json_data_file)
         return hostConfig
@@ -43,7 +44,7 @@ async def getConfig(args=None):
 
 async def connectToGateway():
     hostConfig=await getConfig()
-
+    
     api_factory = APIFactory(hostConfig["Gateway"], hostConfig["Identity"],hostConfig["Passkey"])
     api = api_factory.request
     gateway = Gateway()
