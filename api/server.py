@@ -11,19 +11,25 @@ else:
 
 PORT = 8085
 
+class Routes():
+    api = None
+    gateway = None
+
+    routes = web.RouteTableDef()
+
+    @routes.get("/")
+    async def index(self, request):
+        return web.Response(text="Hello, world")
+
+    @routes.get("/devices/")
+    async def listdevices(self, request):
+        lights, outlets, groups, others = await devices.getDevices(self.api, self.gateway)
+        return web.Response(text=json.dumps(lights))
+
 class TradfriServer():
     routes = web.RouteTableDef()
     api = None
     gateway = None
-
-    @routes.get("/")
-    async def index(request):
-        return web.Response(text="Hello, world")
-
-    @routes.get("/devices/")
-    async def listdevices(request):
-        lights, outlets, groups, others = await getDevices(api, gateway)
-        return web.Response(text=json.dumps(lights))
 
     async def start(self):
         self.adi, self.gateway = await config.connectToGateway()
@@ -35,7 +41,9 @@ class TradfriServer():
                 functools.partial(self.ask_exit, signame))
 
         app = web.Application()
-        app.add_routes(self.routes)
+        routes = Routes()
+
+        app.add_routes(routes.routes)
         runner = web.AppRunner(app)
         await runner.setup()
         site = web.TCPSite(runner, 'localhost', PORT)
