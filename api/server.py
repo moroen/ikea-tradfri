@@ -3,10 +3,10 @@ import asyncio
 import json, os, signal, functools
 
 if __name__ == "__main__":
-    from devices import getDevices
+    import devices as Devices
     import config
 else:
-    from . import devices
+    from . import devices as Devices
     from . import config
 
 PORT = 8085
@@ -15,36 +15,55 @@ class TradfriServer():
     routes = web.RouteTableDef()
     api = None
     gateway = None
+    api_factory = None
 
-    @routes.get("/")
-    async def index(request):
+
+    # @routes.get("/")
+    async def index(self,request):
         return web.Response(text="Hello, world")
 
-    @routes.get("/devices/")
-    async def listdevices(request):
-        lights, outlets, groups, others = await getDevices(api, gateway)
-        return web.Response(text=json.dumps(lights))
+    
+    #@routes.get("/devices/")
+    async def listdevices(self, request):
+        devices =[] 
+        lights, outlets, groups, others = await Devices.getDevices(self.api, self.gateway)
+        
+        for aDevice in lights:
+            devices.append({"DeviceID": aDevice.id, "Name": aDevice.name, "Type": "Light", "Dimmable": aDevice.light_control.can_set_dimmer, "HasWB": aDevice.light_control.can_set_temp, "HasRGB": aDevice.light_control.can_set_xy})
+
+        return web.Response(text=json.dumps(devices))
 
     async def start(self):
-        self.adi, self.gateway = await config.connectToGateway()
+        self.api, self.gateway, self.api_factory = await config.connectToGateway()
         loop = asyncio.get_event_loop()
+
+        # for signame in {'SIGINT', 'SIGTERM'}:
+        #     loop.add_signal_handler(
+        #         getattr(signal, signame),
+        #         functools.partial(self.ask_exit, signame))
 
         for signame in {'SIGINT', 'SIGTERM'}:
             loop.add_signal_handler(
                 getattr(signal, signame),
-                functools.partial(self.ask_exit, signame))
+                    lambda: asyncio.ensure_future(self.ask_exit(signame)))
 
         app = web.Application()
-        app.add_routes(self.routes)
+        
+        # app.add_routes(self.routes)
+        
+        app.add_routes([web.get('/', self.index), web.get('/devices', self.listdevices)])
+
         runner = web.AppRunner(app)
         await runner.setup()
         site = web.TCPSite(runner, 'localhost', PORT)
         
         print("Starting IKEA-Tradfri server on localhost:{0}".format(PORT))
+
         await site.start()
 
-    def ask_exit(self, signame):
+    async def ask_exit(self, signame):
         print("Received signal %s: exiting" % signame)
+        await self.api_factory.shutdown()
         loop = asyncio.get_event_loop()
         loop.stop()
 

@@ -13,6 +13,8 @@ async def getConfig(args=None):
     hostConfig = {}
 
     CONFIGFILE = "{0}/gateway.json".format(appdirs.user_config_dir(appname="tradfri"))
+
+    # print(CONFIGFILE)
  
     if args != None:
         if args.command=="config":
@@ -49,4 +51,4 @@ async def connectToGateway():
     api = api_factory.request
     gateway = Gateway()
 
-    return api, gateway
+    return api, gateway, api_factory
