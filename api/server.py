@@ -11,8 +11,7 @@ else:
 
 PORT = 8085
 
-class TradfriServer():
-    routes = web.RouteTableDef()
+class Routes():
     api = None
     gateway = None
     api_factory = None
@@ -32,6 +31,11 @@ class TradfriServer():
             devices.append({"DeviceID": aDevice.id, "Name": aDevice.name, "Type": "Light", "Dimmable": aDevice.light_control.can_set_dimmer, "HasWB": aDevice.light_control.can_set_temp, "HasRGB": aDevice.light_control.can_set_xy})
 
         return web.Response(text=json.dumps(devices))
+
+class TradfriServer():
+    routes = web.RouteTableDef()
+    api = None
+    gateway = None
 
     async def start(self):
         self.api, self.gateway, self.api_factory = await config.connectToGateway()
