@@ -87,11 +87,8 @@ if __name__ == "__main__":
     if args.command == "server":
         from api import server as Server
         
-        server = Server.TradfriServer()
-
-        future = asyncio.Future()
         loop = asyncio.get_event_loop()
-        loop.create_task(server.start())
+        loop.create_task(Server.start())
 
         try:
             loop.run_forever()
