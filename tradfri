@@ -14,9 +14,6 @@ from ikeatradfri import cli, devices, config, console
 
 hostConfig = {}
 
-logging.basicConfig(level=logging.CRITICAL)
- 
-
 def hexToRgb(hex):
     rgb = {}
 
@@ -25,11 +22,6 @@ def hexToRgb(hex):
     rgb["blue"] = int(hex[-2:], 16)
 
     return rgb
-
-
-
-
-
 
 # whiteTemps = {"cold":"f5faf6", "normal":"f1e0b5", "warm":"efd275"}
 
@@ -83,6 +75,8 @@ async def run(args):
     await api_factory.shutdown()
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.CRITICAL)
+
     args = cli.getArgs()
     if args.command == "server":
         from api import server as Server
