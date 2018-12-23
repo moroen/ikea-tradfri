@@ -10,11 +10,11 @@ from pytradfri.api.aiocoap_api import APIFactory
 
 import asyncio, functools
 import aiocoap, logging
-from api import cli, devices, config, console
+from ikeatradfri import cli, devices, config, console
 
 hostConfig = {}
 
-# logging.basicConfig(level=logging.FATAL)
+logging.basicConfig(level=logging.CRITICAL)
  
 
 def hexToRgb(hex):

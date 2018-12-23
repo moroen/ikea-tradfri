@@ -1,14 +1,15 @@
 from setuptools import setup, find_packages
 
 setup(
-    name = 'ikea-tradfri',
+    name = 'ikeatradfri',
     version = '0.0.1',
     url = 'https://github.com/moroen/ikea-tradfri.git',
     author = 'moroen',
     author_email = 'moroen@gmail.com',
     description = 'Controlling IKEA-Tradfri',
-    packages = find_packages(),
+    packages = ['ikeatradfri'],
+    include_package_data=True,
     setup_requires = ['cython'],
     install_requires = ['cython', 'pytradfri[async]', 'appdirs'],
-    scripts = ['tradfri.py'],
+    scripts = ['tradfri'],
 )
