@@ -29,8 +29,6 @@ async def start():
     app["api"], app["gateway"], APP_FACTORY = await config.connectToGateway()
     app.add_routes(routes)
     
-    
-
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, 'localhost', PORT)

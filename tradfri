@@ -75,11 +75,11 @@ async def run(args):
     await api_factory.shutdown()
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.CRITICAL)
+    # logging.basicConfig(level=logging.CRITICAL)
 
     args = cli.getArgs()
     if args.command == "server":
-        from api import server as Server
+        from ikeatradfri import server as Server
         
         loop = asyncio.get_event_loop()
         loop.create_task(Server.start())

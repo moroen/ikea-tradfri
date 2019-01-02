@@ -10,6 +10,6 @@ setup(
     packages = ['ikeatradfri'],
     include_package_data=True,
     setup_requires = ['cython'],
-    install_requires = ['cython', 'pytradfri[async]', 'appdirs'],
+    install_requires = ['cython', 'pytradfri[async]', 'appdirs', 'aiohttp'],
     scripts = ['tradfri'],
 )
