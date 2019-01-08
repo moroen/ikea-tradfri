@@ -32,20 +32,24 @@ async def run(args):
     api_factory = APIFactory(hostConfig["Gateway"], hostConfig["Identity"],hostConfig["Passkey"])
     api = api_factory.request
     gateway = Gateway()
-
-    # devices_command = gateway.get_devices()
-    # devices_commands = await api(devices_command)
-    # devices = await api(devices_commands)
     
-    if args.command == "on":
-        await devices.setDeviceState(api, gateway, args.ID, True)
-        
-    if args.command == "off":
-        await devices.setDeviceState(api, gateway, args.ID,
-         False)
-        
-    if args.command == "level":
-         await devices.setDeviceLevel(api, gateway, args.ID, args.value)
+    try:
+        if args.command == "on":
+            device = await devices.get_device(api, gateway, args.ID)
+            await device.set_state(True)
+                    
+        if args.command == "off":
+            device = await devices.get_device(api, gateway, args.ID)
+            await device.set_state(False)
+            
+        if args.command == "level":    
+            device = await devices.get_device(api, gateway, args.ID)
+            await device.set_level(args.value)
+    
+    except devices.UnsupportedDeviceCommand:
+        print("Unsupported command '{0}' for device {1}".format(args.command, args.ID))
+    except:
+        raise
 
     # if args.command == "whitetemp":
     #     api(device.light_control.set_hex_color(whiteTemps[args.value]))

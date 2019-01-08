@@ -5,6 +5,9 @@ import asyncio
 import aiocoap, logging
 import json
 
+class UnsupportedDeviceCommand(Exception):
+    pass
+
 class ikea_device(object):
     _device = None
     
@@ -79,7 +82,15 @@ class ikea_device(object):
             await self.api(self._device.light_control.set_state(state))
         elif self._device.has_socket_control:
             await self.api(self._device.socket_control.set_state(state))
+        else:
+            raise UnsupportedDeviceCommand
+        await self.refresh()
 
+    async def set_level(self, level):
+        if self.device_dimmable:
+            await self.api(self._device.light_control.set_dimmer(int(level)))
+        else:
+            raise UnsupportedDeviceCommand
         await self.refresh()
 
     async def refresh(self):
@@ -112,14 +123,14 @@ async def getDevices(api, gateway):
 
     return (lights, outlets, groups, others)    
 
-async def setDeviceState(api, gateway, id, state):
-    device = await api(gateway.get_device(str(id)))
+# async def setDeviceState(api, gateway, id, state):
+#     device = await api(gateway.get_device(str(id)))
 
-    if device.has_light_control:
-        await api(device.light_control.set_state(state))
-    elif device.has_socket_control:
-        await api(device.socket_control.set_state(state))
+#     if device.has_light_control:
+#         await api(device.light_control.set_state(state))
+#     elif device.has_socket_control:
+#         await api(device.socket_control.set_state(state))
 
-async def setDeviceLevel(api, gateway, id, value):
-    device = await api(gateway.get_device(str(id)))
-    await api(device.light_control.set_dimmer(int(value)))
+# async def setDeviceLevel(api, gateway, id, value):
+#     device = await api(gateway.get_device(str(id)))
+#     await api(device.light_control.set_dimmer(int(value)))
