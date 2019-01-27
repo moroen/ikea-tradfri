@@ -86,9 +86,9 @@ class ikea_device(object):
             raise UnsupportedDeviceCommand
         await self.refresh()
 
-    async def set_level(self, level):
+    async def set_level(self, level, transition_time=10):
         if self.device_dimmable:
-            await self.api(self._device.light_control.set_dimmer(int(level)))
+            await self.api(self._device.light_control.set_dimmer(int(level), transition_time=transition_time))
         else:
             raise UnsupportedDeviceCommand
         await self.refresh()

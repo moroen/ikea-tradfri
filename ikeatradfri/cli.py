@@ -27,10 +27,12 @@ def getArgs():
 
     subparsers.add_parser("list")
     subparsers.add_parser("showhex")
+    subparsers.add_parser("pair")
 
     parser_level = subparsers.add_parser("level")
     parser_level.add_argument("ID")
     parser_level.add_argument("value", type=check_level)
+    parser_level.add_argument("--transition_time", nargs='?', default=10, type=int)
 
     parser_colortemp = subparsers.add_parser("whitetemp")
     parser_colortemp.add_argument("value", choices=['cold', 'normal', 'warm'])

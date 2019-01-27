@@ -34,6 +34,12 @@ async def listdevices(request):
     for aDevice in lights:
         devices.append({"DeviceID": aDevice.id, "Name": aDevice.name, "Type": "Light", "Dimmable": aDevice.light_control.can_set_dimmer, "HasWB": aDevice.light_control.can_set_temp, "HasRGB": aDevice.light_control.can_set_xy})
 
+    for aDevice in outlets:
+        devices.append({"DeviceID": aDevice.id, "Name": aDevice.name, "Type": "Outlet", "Dimmable": False, "HasWB": False, "HasRGB": False})
+
+    for aGroup in groups:
+        devices.append({"DeviceID": aGroup.id, "Name": aGroup.name, "Type": "Group"})
+
     return web.Response(text=json.dumps(devices))
 
 @routes.view('/devices/{id}')
@@ -51,3 +57,33 @@ class DeviceView(web.View):
             return web.json_response(return_object(status="Error", result="No PUT-data given"))
         
         return web.json_response(returnObject)
+
+@routes.get('/lights')
+async def listlights(request):
+    devices =[] 
+    lights, outlets, groups, others = await Devices.getDevices(request.app["api"], request.app["gateway"])
+        
+    for aDevice in lights:
+        devices.append({"DeviceID": aDevice.id, "Name": aDevice.name, "Type": "Light", "Dimmable": aDevice.light_control.can_set_dimmer, "HasWB": aDevice.light_control.can_set_temp, "HasRGB": aDevice.light_control.can_set_xy})
+
+    return web.Response(text=json.dumps(devices))
+
+@routes.get('/outlets')
+async def listlights(request):
+    devices =[] 
+    lights, outlets, groups, others = await Devices.getDevices(request.app["api"], request.app["gateway"])
+
+    for aDevice in outlets:
+        devices.append({"DeviceID": aDevice.id, "Name": aDevice.name, "Type": "Outlet", "Dimmable": False, "HasWB": False, "HasRGB": False})    
+    
+    return web.Response(text=json.dumps(devices))
+
+@routes.get('/groups')
+async def listlights(request):
+    devices =[] 
+    lights, outlets, groups, others = await Devices.getDevices(request.app["api"], request.app["gateway"])
+
+    for aGroup in groups:
+        devices.append({"DeviceID": aGroup.id, "Name": aGroup.name, "Type": "Group"})  
+    
+    return web.Response(text=json.dumps(devices))

@@ -11,12 +11,15 @@ gateway = None
 
 async def getConfig(args=None):
     hostConfig = {}
+    showConfig = False
 
     CONFIGFILE = "{0}/gateway.json".format(appdirs.user_config_dir(appname="tradfri"))
 
     # print(CONFIGFILE)
- 
-    if args != None:
+    if args != None:   
+        if args.command=="showconfig":
+            showConfig = True
+
         if args.command=="config":
             identity = uuid.uuid4().hex
             api_factory = APIFactory(host=args.IP, psk_id=identity)
@@ -39,6 +42,8 @@ async def getConfig(args=None):
     if os.path.isfile(CONFIGFILE):
         with open(CONFIGFILE) as json_data_file:
             hostConfig = json.load(json_data_file)
+        if showConfig:
+            print(hostConfig)
         return hostConfig
     else:
         print ("Fatal: No config.json found")

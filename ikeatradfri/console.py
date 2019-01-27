@@ -13,7 +13,7 @@ async def listDevices(api, gateway):
 
     print ("\nDevices:")
     for aDevice in others:
-            print("{0}: {1} ({2})".format(aDevice.id, aDevice.name, aDevice.device_info.model_number))
+            print("{0}: {1} ({2}) - {3}".format(aDevice.id, aDevice.name, aDevice.device_info.model_number, aDevice.device_info.battery_level))
 
     print("\nGroups:")
     for aGroup in groups:

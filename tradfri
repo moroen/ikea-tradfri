@@ -44,7 +44,9 @@ async def run(args):
             
         if args.command == "level":    
             device = await devices.get_device(api, gateway, args.ID)
-            await device.set_level(args.value)
+            print (args.value)
+            print (args.transition_time)
+            await device.set_level(args.value, transition_time=args.transition_time)
     
     except devices.UnsupportedDeviceCommand:
         print("Unsupported command '{0}' for device {1}".format(args.command, args.ID))
@@ -56,6 +58,12 @@ async def run(args):
 
     if args.command == "list":
         await console.listDevices(api, gateway)
+
+    if args.command == "pair":
+        from ikeatradfri import pair
+        shutdown = asyncio.Future()
+        await pair.pair(api_factory, shutdown)
+        
 
     # if args.command == "hex":
     #     api(device.light_control.set_hex_color(args.value))
