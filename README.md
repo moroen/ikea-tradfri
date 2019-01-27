@@ -11,10 +11,10 @@ Please use the libcoap (sync)-version of the library, instructions for installin
 ```
 
 
-The script needs the gateway IP and key, this can be set with the --gateway and --key options. This is only needed on first use, run the command from the directory the script is located, and the ini-file will be created:
+The script needs the gateway IP and key, this can be set with the config option. This is only needed on first use, run the command from the directory the script is located, and the ini-file will be created:
 
 ```shell
-./tradfri.py --gateway IP --key KEY list
+./tradfri.py config IP KEY
 ```
 
 # Domoticz
