@@ -41,15 +41,18 @@ def getArgs():
     parser_hex.add_argument("ID")
     parser_hex.add_argument("value")
 
-    parser_hex = subparsers.add_parser("hsb")
-    parser_hex.add_argument("ID")
-    parser_hex.add_argument("hue")
-    parser_hex.add_argument("saturation")
+    parser_hsb = subparsers.add_parser("hsb")
+    parser_hsb.add_argument("ID")
+    parser_hsb.add_argument("hue")
+    parser_hsb.add_argument("saturation")
     parser_hex.add_argument("brightness", nargs="?")
-    
-    parser_rgb = subparsers.add_parser("rgb")
-    parser_rgb.add_argument("value")
 
+    parser_rgb = subparsers.add_parser("rgb")
+    parser_rgb.add_argument("ID")
+    parser_rgb.add_argument("red", type=int)
+    parser_rgb.add_argument("green", type=int)
+    parser_rgb.add_argument("blue", type=int)
+    
     subparsers.add_parser("raw").add_argument("ID")
 
     return parser.parse_args()

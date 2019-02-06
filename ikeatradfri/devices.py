@@ -1,9 +1,9 @@
-from pytradfri import Gateway
+from pytradfri import Gateway, const
 from pytradfri.api.aiocoap_api import APIFactory
 
 import asyncio
 import aiocoap, logging
-import json
+import json, colorsys
 
 class UnsupportedDeviceCommand(Exception):
     pass
@@ -111,7 +111,15 @@ class ikea_device(object):
         await self.refresh()
 
     async def set_hsb(self, hue, saturation, brightness=None, transition_time=10):
-        await self.api(self._device.light_control.set_hsb(int(hue), int(saturation), int(brightness), transition_time=transition_time))
+        if brightness != None:
+            brightness = int(brightness)
+
+        await self.api(self._device.light_control.set_hsb(int(hue), int(saturation), brightness, transition_time=transition_time))
+    
+    async def set_rgb(self, red, green, blue):
+        h,s,b = colorsys.rgb_to_hsv(red/255, green/255, blue/255)
+        print (h,s,b)
+        await self.set_hsb(h*const.RANGE_HUE[1], s*const.RANGE_SATURATION[1], b*const.RANGE_BRIGHTNESS[1])
 
     async def refresh(self):
         gateway = Gateway()

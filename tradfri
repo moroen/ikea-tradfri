@@ -75,6 +75,10 @@ async def run(args):
         await device.set_hsb(int(args.hue)*65535/360, int(args.saturation)*65279/100, args.brightness)
     #     api(device.light_control.set_hex_color(args.value))
         
+    if args.command == "rgb":
+        device = await devices.get_device(api, gateway, args.ID)
+        await device.set_rgb(args.red, args.green, args.blue)
+        
     # if args.command == "rgb":
     #     rgb = hexToRgb(args.value)
     #     api(device.light_control.set_rgb_color(rgb["red"], rgb["green"], rgb["blue"]))
