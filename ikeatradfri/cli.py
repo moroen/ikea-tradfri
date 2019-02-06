@@ -26,8 +26,8 @@ def getArgs():
     subparsers.add_parser("server")
 
     subparsers.add_parser("list")
-    subparsers.add_parser("showhex")
-    subparsers.add_parser("pair")
+    
+    # subparsers.add_parser("pair")
 
     parser_level = subparsers.add_parser("level")
     parser_level.add_argument("ID")
@@ -38,9 +38,18 @@ def getArgs():
     parser_colortemp.add_argument("value", choices=['cold', 'normal', 'warm'])
 
     parser_hex = subparsers.add_parser("hex")
+    parser_hex.add_argument("ID")
     parser_hex.add_argument("value")
 
+    parser_hex = subparsers.add_parser("hsb")
+    parser_hex.add_argument("ID")
+    parser_hex.add_argument("hue")
+    parser_hex.add_argument("saturation")
+    parser_hex.add_argument("brightness", nargs="?")
+    
     parser_rgb = subparsers.add_parser("rgb")
     parser_rgb.add_argument("value")
+
+    subparsers.add_parser("raw").add_argument("ID")
 
     return parser.parse_args()

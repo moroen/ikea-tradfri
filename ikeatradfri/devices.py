@@ -72,11 +72,20 @@ class ikea_device(object):
         else:
             return False
 
+    @property
+    def device_has_hex(self):
+        return self._device.light_control.can_set_xy
+
     @property 
     def description(self):
         return {"DeviceID": self.device_id, "Name": self.device_name, "State": self.state, "Level": self.level, "Type": self.device_type, "Dimmable": self.device_dimmable, 
             "HasWB": self.device_has_wb, "HasRGB": self.device_has_rgb}
 
+    @property
+    def raw(self):
+        return self._device.raw
+
+    # Functions
     async def set_state(self, state):
         if self._device.has_light_control:
             await self.api(self._device.light_control.set_state(state))
@@ -92,6 +101,17 @@ class ikea_device(object):
         else:
             raise UnsupportedDeviceCommand
         await self.refresh()
+
+    async def set_hex(self, hex, transition_time=10):
+        if self.device_has_hex:
+            await self.api(self._device.light_control.set_hex_color(hex, transition_time=transition_time))
+        else:
+            raise UnsupportedDeviceCommand
+        
+        await self.refresh()
+
+    async def set_hsb(self, hue, saturation, brightness=None, transition_time=10):
+        await self.api(self._device.light_control.set_hsb(int(hue), int(saturation), int(brightness), transition_time=transition_time))
 
     async def refresh(self):
         gateway = Gateway()

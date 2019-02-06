@@ -44,8 +44,6 @@ async def run(args):
             
         if args.command == "level":    
             device = await devices.get_device(api, gateway, args.ID)
-            print (args.value)
-            print (args.transition_time)
             await device.set_level(args.value, transition_time=args.transition_time)
     
     except devices.UnsupportedDeviceCommand:
@@ -64,8 +62,17 @@ async def run(args):
         shutdown = asyncio.Future()
         await pair.pair(api_factory, shutdown)
         
+    if args.command == "raw":
+        device = await devices.get_device(api, gateway, args.ID)
+        print (device.raw)
 
-    # if args.command == "hex":
+    if args.command == "hex":
+        device = await devices.get_device(api, gateway, args.ID)
+        await device.set_hex(args.value)
+
+    if args.command == "hsb":
+        device = await devices.get_device(api, gateway, args.ID)
+        await device.set_hsb(int(args.hue)*65535/360, int(args.saturation)*65279/100, args.brightness)
     #     api(device.light_control.set_hex_color(args.value))
         
     # if args.command == "rgb":
