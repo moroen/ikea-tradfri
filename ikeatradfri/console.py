@@ -1,4 +1,3 @@
-from .config import api, gateway
 from .devices import getDevices
 
 async def listDevices(api, gateway):

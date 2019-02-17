@@ -1,58 +1,63 @@
 #!/usr/bin/env python3
 
 import argparse
+import asyncio
 import configparser
-import os, signal
-import uuid,json
+import functools
+import json
+import logging
+import os
+import signal
+import uuid
 
+from ikeatradfri import cli, config, console, devices
+
+import aiocoap
 from pytradfri import Gateway
 from pytradfri.api.aiocoap_api import APIFactory
 
-import asyncio, functools
-import aiocoap, logging
-from ikeatradfri import cli, devices, config, console
-
 hostConfig = {}
+
 
 def hexToRgb(hex):
     rgb = {}
 
     rgb["red"] = int(hex[:2], 16)
-    rgb["green"] = int(hex[2:4],16)
+    rgb["green"] = int(hex[2:4], 16)
     rgb["blue"] = int(hex[-2:], 16)
 
     return rgb
 
-# whiteTemps = {"cold":"f5faf6", "normal":"f1e0b5", "warm":"efd275"}
 
 async def run(args):
-    
-    hostConfig=await config.getConfig(args)
+    hostConfig = await config.getConfig(args)
 
-    api_factory = APIFactory(hostConfig["Gateway"], hostConfig["Identity"],hostConfig["Passkey"])
+    api_factory = APIFactory(hostConfig["Gateway"], hostConfig["Identity"],
+                             hostConfig["Passkey"])
     api = api_factory.request
     gateway = Gateway()
-    
+
     try:
         if args.command == "on":
             device = await devices.get_device(api, gateway, args.ID)
             await device.set_state(True)
-                    
+
         if args.command == "off":
             device = await devices.get_device(api, gateway, args.ID)
             await device.set_state(False)
-            
-        if args.command == "level":    
+
+        if args.command == "level":
             device = await devices.get_device(api, gateway, args.ID)
-            await device.set_level(args.value, transition_time=args.transition_time)
-    
+            await device.set_level(args.value,
+                                   transition_time=args.transition_time)
+
     except devices.UnsupportedDeviceCommand:
-        print("Unsupported command '{0}' for device {1}".format(args.command, args.ID))
+        logging.error("Unsupported command '{0}' for device {1}".format(
+            args.command,
+            args.ID
+            ))
     except:
         raise
-
-    # if args.command == "whitetemp":
-    #     api(device.light_control.set_hex_color(whiteTemps[args.value]))
 
     if args.command == "list":
         await console.listDevices(api, gateway)
@@ -61,10 +66,10 @@ async def run(args):
         from ikeatradfri import pair
         shutdown = asyncio.Future()
         await pair.pair(api_factory, shutdown)
-        
+
     if args.command == "raw":
         device = await devices.get_device(api, gateway, args.ID)
-        print (device.raw)
+        print(device.raw)
 
     if args.command == "hex":
         device = await devices.get_device(api, gateway, args.ID)
@@ -72,45 +77,42 @@ async def run(args):
 
     if args.command == "hsb":
         device = await devices.get_device(api, gateway, args.ID)
-        await device.set_hsb(int(args.hue)*65535/360, int(args.saturation)*65279/100, args.brightness)
-    #     api(device.light_control.set_hex_color(args.value))
-        
+        await device.set_hsb(int(args.hue)*65535/360,
+                             int(args.saturation)*65279/100,
+                             args.brightness)
+
     if args.command == "rgb":
         device = await devices.get_device(api, gateway, args.ID)
         await device.set_rgb(args.red, args.green, args.blue)
-        
-    # if args.command == "rgb":
-    #     rgb = hexToRgb(args.value)
-    #     api(device.light_control.set_rgb_color(rgb["red"], rgb["green"], rgb["blue"]))
-
-    # if args.command == "showhex":
-    #     print(device.light_control.lights[0].hex_color)
-
-    # if args.command == "test":
-    #     #   api(device.light_control.set_rgb_color(0,0,))
-    #     # print(device.light_control.lights[0].hex_color)
-    #     api(device.light_control.set_kelvin_color(1667))
-    #     # print(device.light_control.min_kelvin)
-
-    # if args.command == "me":
-    #     pass
 
     await api_factory.shutdown()
 
 if __name__ == "__main__":
-    # logging.basicConfig(level=logging.CRITICAL)
-
     args = cli.getArgs()
-    if args.command == "server":
-        from ikeatradfri import server as Server
-        
-        loop = asyncio.get_event_loop()
-        loop.create_task(Server.start())
 
-        try:
-            loop.run_forever()
-        except KeyboardInterrupt:
-            print("Received exit, exiting")
+    if args.debug:
+        logging.basicConfig(format='%(levelname)s:%(message)s',
+                            level=logging.DEBUG)
     else:
-        asyncio.get_event_loop().run_until_complete(run(args))
-    
+        logging.basicConfig(format='%(levelname)s:%(message)s',
+                            level=logging.INFO)
+
+    loop = asyncio.get_event_loop()
+
+    try:
+        if args.command == "server":
+            from ikeatradfri import tcp_server as Server
+            Server.tcp_server()
+        elif args.command == "http":
+            from ikeatradfri import http_server as Server
+            loop = asyncio.get_event_loop()
+            loop.create_task(Server.start())
+            loop.run_forever()
+        elif args.command == "observe":
+            from ikeatradfri import observe
+            loop.create_task(observe.observe())
+            loop.run_forever()
+        else:
+            loop.run_until_complete(run(args))
+    except KeyboardInterrupt:
+        print("Received exit, exiting")

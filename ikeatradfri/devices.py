@@ -121,6 +121,28 @@ class ikea_device(object):
         print (h,s,b)
         await self.set_hsb(h*const.RANGE_HUE[1], s*const.RANGE_SATURATION[1], b*const.RANGE_BRIGHTNESS[1])
 
+        # rgb = (red, green, blue)
+
+        # print(rgb)
+
+        # # Convert RGB to XYZ using a D60 illuminant.
+        # xyz = convert_color(sRGBColor(rgb[0], rgb[1], rgb[2]), XYZColor, observer='2', target_illuminant='d65')
+        # xy = int(xyz.xyz_x), int(xyz.xyz_y)
+
+        # print(xy)
+
+        # await self.api(self._device.light_control.set_xy_color(xy[0], xy[1]))
+
+        xy = self._device.light_control.lights[0].xy_color
+
+        #  Normalize Z
+        Z = int(self._device.light_control.lights[0].dimmer / 254 * 65535)
+        xyZ = xy + (Z,)
+        rgb = convert_color(XYZColor(xyZ[0], xyZ[1], xyZ[2]), sRGBColor, observer='2', target_illuminant='d65')
+        rgb = (int(rgb.rgb_r), int(rgb.rgb_g), int(rgb.rgb_b))
+        print(rgb)
+
+
     async def refresh(self):
         gateway = Gateway()
         self.__init__(await self.api(gateway.get_device(int(self.device_id))), self.api)

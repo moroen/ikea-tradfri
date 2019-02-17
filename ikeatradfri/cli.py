@@ -13,6 +13,8 @@ def check_level(value):
 def getArgs():
     parser = argparse.ArgumentParser()
 
+    parser.add_argument("--debug", action='store_true')
+
     subparsers = parser.add_subparsers(dest="command")
     subparsers.required = False
 
@@ -24,6 +26,7 @@ def getArgs():
     subparsers.add_parser("off").add_argument("ID")
 
     subparsers.add_parser("server")
+    subparsers.add_parser("http")
 
     subparsers.add_parser("list")
     
@@ -54,5 +57,7 @@ def getArgs():
     parser_rgb.add_argument("blue", type=int)
     
     subparsers.add_parser("raw").add_argument("ID")
+
+    subparsers.add_parser("observe")
 
     return parser.parse_args()

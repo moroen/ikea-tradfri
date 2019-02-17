@@ -1,23 +1,26 @@
 from aiohttp import web
+import json
 
 try:
     from . import devices as Devices
 except ImportError:
     import devices as Devices
-    from routes import return_object
 
 import json
 
-def return_object(command=None, status=None, result=None):
-    retObj = {}
-    if not command is None:
-        retObj["command"]=command
-    if not status is None:
-        retObj["status"]=status
-    if not result is None:
-        retObj["result"]=result
+class return_object():
+    def __init__(self, action=None, status="Error", result=None):
+        self._action=action
+        self._status=status
+        self._result=result
 
-    return retObj
+    @property
+    def json(self):
+        if self._result != None:
+            return json.dumps({"action":self._action, "status": self._status, "result": self._result}).encode("utf-8")
+        else:
+            return json.dumps({"action":self._action, "status": self._status}).encode("utf-8")
+
 
 async def serverCommand(request):
     device = await Devices.get_device(request.app['api'], request.app['gateway'], request.match_info['id'])
@@ -29,12 +32,12 @@ async def serverCommand(request):
         elif data["command"] == "setlevel":
             await device.set_level(int(data["value"])) 
         else:      
-            return return_object(command=data["command"], status="Error", result="Unknown command")
+            return return_object(action=data["command"], status="Error", result="Unknown command")
         
-        return return_object(command=data["command"], status="Ok", result=device.description)
+        return return_object(action=data["command"], status="Ok", result=device.description)
     except json.decoder.JSONDecodeError:
         return return_object(status="Error", result="Malformed request")
     except Devices.UnsupportedDeviceCommand:
-        return return_object(command=data["command"], status="Error", result="Unsupported command")
+        return return_object(action=data["command"], status="Error", result="Unsupported command")
     except:
         raise

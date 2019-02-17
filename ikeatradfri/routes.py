@@ -9,17 +9,6 @@ except ImportError:
 
 import json
 
-def return_object(command=None, status=None, result=None):
-    retObj = {}
-    if not command is None:
-        retObj["command"]=command
-    if not status is None:
-        retObj["status"]=status
-    if not result is None:
-        retObj["result"]=result
-
-    return retObj
-
 routes = web.RouteTableDef()
 
 @routes.get('/')

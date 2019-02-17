@@ -6,8 +6,9 @@ from pytradfri.api.aiocoap_api import APIFactory
 
 import appdirs
 
-api = None
-gateway = None
+_API = None
+_GATEWAY = None
+_API_FACTORY = None
 
 async def getConfig(args=None):
     hostConfig = {}
@@ -49,11 +50,18 @@ async def getConfig(args=None):
         print ("Fatal: No config.json found")
         exit()
 
-async def connectToGateway():
+async def connectToGateway(storeConfig=False):
+    global _API, _API_FACTORY, _GATEWAY
+
     hostConfig=await getConfig()
-    
+
     api_factory = APIFactory(hostConfig["Gateway"], hostConfig["Identity"],hostConfig["Passkey"])
     api = api_factory.request
     gateway = Gateway()
+
+    if storeConfig:
+        _API = api
+        _API_FACTORY = api_factory
+        _GATEWAY = gateway
 
     return api, gateway, api_factory
