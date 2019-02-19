@@ -5,8 +5,7 @@ import asyncio
 import aiocoap, logging
 import json, colorsys
 
-class UnsupportedDeviceCommand(Exception):
-    pass
+from .exceptions import UnsupportedDeviceCommand
 
 class ikea_device(object):
     _device = None

@@ -4,13 +4,15 @@ import logging
 import signal
 
 
-from . import config, devices
+from . import config, devices, exceptions
 from .server_commands import return_object
 
 class tcp_server():
     _api = None
     _gateway = None
     _api_factory = None
+
+    _server = None
 
     def __init__(self, autostart=True):
         if autostart:
@@ -45,6 +47,7 @@ class tcp_server():
                 return
 
     async def init_gateway(self, command):
+        self._api, self._gateway, self._api_factory = await config.connectToGateway()
         return return_object("initGateway", status="Ok")
 
     async def handle_signals(self, loop):
@@ -57,15 +60,27 @@ class tcp_server():
     async def ask_exit(self,signame):
         global _run_server
         logging.info("Received signal %s: exiting" % signame)
-        
         loop = asyncio.get_event_loop()
-        loop.stop()
+
+        logging.info("Stopping TCP-server")
+        self._server.close()
+        await self._server.wait_closed()
+        await asyncio.sleep(1)
+        loop.close()
+        
 
     def start_tcp_server(self):
         loop = asyncio.get_event_loop()
-        coro = asyncio.start_server(self.handle_echo, '127.0.0.1', 1234, loop=loop)
+        
+        
+        loop.create_task(config.getConfig())
         loop.create_task(self.handle_signals(loop))
-        server = loop.run_until_complete(coro)
+        coro = asyncio.start_server(self.handle_echo, '127.0.0.1', 1234, loop=loop)
+       
+        try:
+            server = loop.run_until_complete(coro)
+        except exceptions.ConfigNotFound:
+            logging.error("SgiteConfig-file not found")
 
         # Serve requests until Ctrl+C is pressed
         logging.info('Serving on {}'.format(server.sockets[0].getsockname()))
@@ -79,6 +94,20 @@ class tcp_server():
         #loop.run_until_complete(server.wait_closed())
         #loop.close()
 
+    async def main(self):
+        loop = asyncio.get_event_loop()
+        await self.handle_signals(loop)
+        
+        await config.getConfig()
+
+        
+        self._server = await asyncio.start_server(self.handle_echo, '127.0.0.1', 1234)
+        
+        addr = self._server.sockets[0].getsockname()
+        logging.info(f'Serving on {addr}')
+
+        await self._server.serve_forever()
+        
 if __name__ == "__main__":
     logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
     server = tcp_server()

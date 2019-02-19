@@ -3,18 +3,21 @@ import uuid,json
 
 from pytradfri import Gateway
 from pytradfri.api.aiocoap_api import APIFactory
-
+import logging
 import appdirs
+
+from .exceptions import ConfigNotFound
 
 _API = None
 _GATEWAY = None
 _API_FACTORY = None
-
+    
 async def getConfig(args=None):
     hostConfig = {}
     showConfig = False
 
     CONFIGFILE = "{0}/gateway.json".format(appdirs.user_config_dir(appname="tradfri"))
+    logging.debug("Looking for config: {}".format(CONFIGFILE))
 
     # print(CONFIGFILE)
     if args != None:   
@@ -47,8 +50,8 @@ async def getConfig(args=None):
             print(hostConfig)
         return hostConfig
     else:
-        print ("Fatal: No config.json found")
-        exit()
+        logging.error("Config-file not found")
+        raise ConfigNotFound
 
 async def connectToGateway(storeConfig=False):
     global _API, _API_FACTORY, _GATEWAY
