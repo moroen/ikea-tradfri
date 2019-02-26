@@ -29,6 +29,7 @@ def getArgs():
     subparsers.add_parser("http")
 
     subparsers.add_parser("list")
+    subparsers.add_parser("test")
     
     # subparsers.add_parser("pair")
 

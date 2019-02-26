@@ -15,6 +15,7 @@ from ikeatradfri import cli, config, console, devices, exceptions
 import aiocoap
 from pytradfri import Gateway
 from pytradfri.api.aiocoap_api import APIFactory
+from pytradfri import error as pyerror
 
 from concurrent.futures import CancelledError
 
@@ -88,7 +89,15 @@ async def run(args):
         device = await devices.get_device(api, gateway, args.ID)
         await device.set_rgb(args.red, args.green, args.blue)
 
+    if args.command == "test":
+        device = await devices.get_device(api, gateway, 65547)
+
     await api_factory.shutdown()
+
+def exception_handler(loop,context):
+   print("Caught the following exception")
+   print(context['message'])
+   #print(context['exception'])
 
 if __name__ == "__main__":
     args = cli.getArgs()
@@ -101,6 +110,8 @@ if __name__ == "__main__":
                             level=logging.INFO)
 
     loop = asyncio.get_event_loop()
+    loop.set_exception_handler(exception_handler)
+    # loop.set_debug(True)
 
     try:
         if args.command == "server":
@@ -125,5 +136,9 @@ if __name__ == "__main__":
         logging.debug("Cancelled")
         loop.stop()    
     except exceptions.ConfigNotFound:
-        print("Shite")
+        print("NoConfig")
         pass
+    except pyerror.ServerError:
+        logging.error("Gateway error!")
+    except pyerror.RequestTimeout:
+        logging.error("Gateway error: Timeout")

@@ -7,6 +7,8 @@ import signal
 from . import config, devices, exceptions
 from .server_commands import return_object
 
+from pytradfri import error as Error
+
 class tcp_server():
     _api = None
     _gateway = None
@@ -34,6 +36,9 @@ class tcp_server():
                 if command["action"] == "initGateway":
                     returnData = await self.init_gateway(command)
 
+                elif command['action'] == "getDevices":
+                    returnData = await self.send_devices_list(command)
+
                 else:
                     returnData = return_object(action=command['action'], status="Error", result="Unknown command")
                 
@@ -49,6 +54,12 @@ class tcp_server():
     async def init_gateway(self, command):
         self._api, self._gateway, self._api_factory = await config.connectToGateway()
         return return_object("initGateway", status="Ok")
+
+    async def send_devices_list(self, command):
+        try:
+            lights, sockets, groups, others = await devices.getDevices(self._api, self._gateway)
+        except Error.ServerError:
+            return return_object("getDevices", status="Error", result="Server error")
 
     async def handle_signals(self, loop):
         for signame in {'SIGINT', 'SIGTERM'}:
