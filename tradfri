@@ -90,7 +90,7 @@ async def run(args):
         await device.set_rgb(args.red, args.green, args.blue)
 
     if args.command == "test":
-        device = await devices.get_device(api, gateway, 65547)
+        device = await devices.get_device(api, gateway, 65590)
 
     await api_factory.shutdown()
 
@@ -118,10 +118,14 @@ if __name__ == "__main__":
             from ikeatradfri import tcp_server as Server
             from ikeatradfri import http_server as http_server
 
-            loop = asyncio.get_event_loop()
+            # loop = asyncio.get_event_loop()
             # loop.create_task(Server.tcp_server(autostart=False).main())
             # loop.create_task(http_server.start())
-            loop.run_until_complete (Server.tcp_server(autostart=False).main())
+            # loop.run_until_complete (Server.tcp_server(autostart=False).main())
+            # loop.create_task(Server.tcp_server(autostart=False).main())
+            # loop.run_forever()
+            Server.tcp_server(autostart=False).start_tcp_server()
+
         elif args.command == "http":
             from ikeatradfri import http_server as Server
             loop = asyncio.get_event_loop()

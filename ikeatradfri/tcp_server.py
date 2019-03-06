@@ -19,6 +19,7 @@ class tcp_server():
 
     _transition_time = 10
 
+    
     def __init__(self, autostart=True):
         if autostart:
             self.start_tcp_server()
@@ -32,7 +33,7 @@ class tcp_server():
                 message = data.decode("utf-8")
                 addr = writer.get_extra_info('peername')
 
-                logging.info(f"Received {message!r} from {addr!r}")
+                logging.info("Received {} from {}".format(message, addr))
 
                 command = json.loads(message)
 
@@ -171,34 +172,41 @@ class tcp_server():
 
         logging.info("Stopping TCP-server")
         self._server.close()
-        await self._server.wait_closed()
-        await asyncio.sleep(1)
+        loop.run_until_complete(self._server.wait_closed())
         loop.close()
 
     def start_tcp_server(self):
         loop = asyncio.get_event_loop()
 
-        loop.create_task(config.getConfig())
-        loop.create_task(self.handle_signals(loop))
+        
+        
+        # loop.create_task(self.handle_signals(loop))
+        try:
+            loop.run_until_complete(loop.create_task(config.getConfig()))
+        except exceptions.ConfigNotFound:
+            #logging.error("Config-file not found")
+            quit()
+        
         coro = asyncio.start_server(
             self.handle_echo, '127.0.0.1', 1234, loop=loop)
 
-        try:
-            server = loop.run_until_complete(coro)
-        except exceptions.ConfigNotFound:
-            logging.error("SgiteConfig-file not found")
-
+        
+        self._server = loop.run_until_complete(coro)
+        
         # Serve requests until Ctrl+C is pressed
-        logging.info('Serving on {}'.format(server.sockets[0].getsockname()))
-        # try:
-        loop.run_forever()
-        # except KeyboardInterrupt:
-        #    pass
+        logging.info('Serving on {}'.format(self._server.sockets[0].getsockname()))
+        try:
+            loop.run_forever()
+        except KeyboardInterrupt:
+            pass
 
         # Close the server
-        # server.close()
-        # loop.run_until_complete(server.wait_closed())
-        # loop.close()
+        logging.info("Closing server")
+        self._server.close()
+        loop.run_until_complete(self._server.wait_closed())
+        if self._api_factory is not None:
+            loop.run_until_complete(self._api_factory.shutdown())
+        loop.close()
 
     async def main(self):
         loop = asyncio.get_event_loop()
@@ -209,6 +217,9 @@ class tcp_server():
         self._server = await asyncio.start_server(self.handle_echo, '127.0.0.1', 1234)
 
         addr = self._server.sockets[0].getsockname()
-        logging.info(f'Serving on {addr}')
+        logging.info('Serving on {}'.format(addr))
 
-        await self._server.serve_forever()
+        # await self._server.serve_forever()
+
+
+
