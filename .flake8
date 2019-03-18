@@ -1,2 +1,2 @@
 [flake8]
-exclude=.direnv/,.eggs/
+exclude=.direnv/,.eggs/,build/
