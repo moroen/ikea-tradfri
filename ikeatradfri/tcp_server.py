@@ -47,7 +47,7 @@ class tcp_server():
 
                 elif command["action"] == "setLevel":
                     returnData = await self.set_level(command)
-                
+
                 elif command["action"] == "setHex":
                     returnData = await self.set_hex(command)
 
@@ -67,12 +67,14 @@ class tcp_server():
                 return
 
     async def init_gateway(self, command):
-        self._api, self._gateway, self._api_factory = await config.connectToGateway()
+        self._api, self._gateway, self._api_factory = \
+            await config.connectToGateway()
         return return_object("initGateway", status="Ok")
 
     async def send_devices_list(self, command):
         try:
-            lights, sockets, groups, others = await Devices.getDevices(self._api, self._gateway)
+            lights, sockets, groups, others = await Devices.getDevices(
+                self._api, self._gateway)
 
             devices = []
 
@@ -80,12 +82,15 @@ class tcp_server():
                 devices.append({"DeviceID": aDevice.id,
                                 "Name": aDevice.name,
                                 "Type": "Light",
-                                "Dimmable": aDevice.light_control.can_set_dimmer,
+                                "Dimmable":
+                                aDevice.light_control.can_set_dimmer,
                                 "HasWB": aDevice.light_control.can_set_temp,
                                 "HasRGB": aDevice.light_control.can_set_xy,
                                 "State": aDevice.light_control.lights[0].state,
-                                "Level": aDevice.light_control.lights[0].dimmer,
-                                "Hex": aDevice.light_control.lights[0].hex_color})
+                                "Level":
+                                aDevice.light_control.lights[0].dimmer,
+                                "Hex":
+                                aDevice.light_control.lights[0].hex_color})
 
             for aDevice in sockets:
                 devices.append({"DeviceID": aDevice.id,
@@ -94,7 +99,8 @@ class tcp_server():
                                 "Dimmable": False,
                                 "HasWB": False,
                                 "HasRGB": False,
-                                "State": aDevice.socket_control.sockets[0].state})
+                                "State":
+                                aDevice.socket_control.sockets[0].state})
 
             for aGroup in groups:
                 devices.append({"DeviceID": aGroup.id,
@@ -126,7 +132,8 @@ class tcp_server():
                 result="Server error")
 
     async def set_state(self, command):
-        device = await Devices.get_device(self._api, self._gateway, command["deviceID"])
+        device = await Devices.get_device(
+            self._api, self._gateway, command["deviceID"])
         if command["state"] == "On":
             await device.set_state(True)
         elif command["state"] == "Off":
@@ -139,9 +146,11 @@ class tcp_server():
         return return_object(action="setState", status="Ok", result=devices)
 
     async def set_level(self, command):
-        device = await Devices.get_device(self._api, self._gateway, command["deviceID"])
+        device = await Devices.get_device(
+            self._api, self._gateway, command["deviceID"])
 
-        await device.set_level(command["level"], transition_time=self._transition_time)
+        await device.set_level(command["level"],
+                               transition_time=self._transition_time)
         await device.refresh()
 
         devices = []
@@ -149,8 +158,10 @@ class tcp_server():
         return return_object(action="setLevel", status="Ok", result=devices)
 
     async def set_hex(self, command):
-        device = await Devices.get_device(self._api, self._gateway, command["deviceID"])
-        await device.set_hex(command["hex"], transition_time = self._transition_time)
+        device = await Devices.get_device(self._api, self._gateway,
+                                          command["deviceID"])
+        await device.set_hex(command["hex"],
+                             transition_time=self._transition_time)
         await device.refresh()
 
         devices = []
@@ -206,7 +217,8 @@ class tcp_server():
 
         await config.getConfig()
 
-        self._server = await asyncio.start_server(self.handle_echo, '127.0.0.1', 1234)
+        self._server = await asyncio.start_server(
+            self.handle_echo, '127.0.0.1', 1234)
 
         addr = self._server.sockets[0].getsockname()
         logging.info(f'Serving on {addr}')

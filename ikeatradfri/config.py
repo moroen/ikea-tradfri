@@ -1,5 +1,6 @@
 import os
-import uuid,json
+import uuid
+import json
 
 from pytradfri import Gateway
 from pytradfri.api.aiocoap_api import APIFactory
@@ -11,20 +12,22 @@ from .exceptions import ConfigNotFound
 _API = None
 _GATEWAY = None
 _API_FACTORY = None
-    
+
+
 async def getConfig(args=None):
     hostConfig = {}
     showConfig = False
 
-    CONFIGFILE = "{0}/gateway.json".format(appdirs.user_config_dir(appname="tradfri"))
+    CONFIGFILE = "{0}/gateway.json".format(
+        appdirs.user_config_dir(appname="tradfri"))
     logging.debug("Looking for config: {}".format(CONFIGFILE))
 
     # print(CONFIGFILE)
-    if args != None:   
-        if args.command=="showconfig":
+    if args is not None:
+        if args.command == "showconfig":
             showConfig = True
 
-        if args.command=="config":
+        if args.command == "config":
             identity = uuid.uuid4().hex
             api_factory = APIFactory(host=args.IP, psk_id=identity)
 
@@ -53,12 +56,16 @@ async def getConfig(args=None):
         logging.error("Config-file not found")
         raise ConfigNotFound
 
+
 async def connectToGateway(storeConfig=False):
     global _API, _API_FACTORY, _GATEWAY
 
-    hostConfig=await getConfig()
+    hostConfig = await getConfig()
 
-    api_factory = APIFactory(hostConfig["Gateway"], hostConfig["Identity"],hostConfig["Passkey"])
+    api_factory = APIFactory(
+        hostConfig["Gateway"],
+        hostConfig["Identity"],
+        hostConfig["Passkey"])
     api = api_factory.request
     gateway = Gateway()
 

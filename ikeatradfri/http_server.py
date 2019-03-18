@@ -1,19 +1,18 @@
 from aiohttp import web
 import asyncio
-import json, os, signal, functools
+import signal
 
 if __name__ == "__main__":
-    import devices as Devices
     import config
     from routes import routes
 else:
-    from . import devices as Devices
     from . import config
     from .routes import routes
 
 PORT = 8085
 APP_FACTORY = None
-    
+
+
 async def start():
     global APP_FACTORY
     loop = asyncio.get_event_loop()
@@ -22,20 +21,20 @@ async def start():
     for signame in {'SIGINT', 'SIGTERM'}:
         loop.add_signal_handler(
             getattr(signal, signame),
-                lambda: asyncio.ensure_future(ask_exit(signame)))
-
+            lambda: asyncio.ensure_future(ask_exit(signame)))
 
     app = web.Application()
     app["api"], app["gateway"], APP_FACTORY = await config.connectToGateway()
     app.add_routes(routes)
-    
+
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, 'localhost', PORT)
-    
+
     print("Starting IKEA-Tradfri server on localhost:{0}".format(PORT))
 
     await site.start()
+
 
 async def ask_exit(signame):
     global APP_FACTORY

@@ -117,8 +117,6 @@ if __name__ == "__main__":
     try:
         if args.command == "server":
             from ikeatradfri import tcp_server as Server
-            from ikeatradfri import http_server as http_server
-
             loop = asyncio.get_event_loop()
             # loop.create_task(Server.tcp_server(autostart=False).main())
             # loop.create_task(http_server.start())

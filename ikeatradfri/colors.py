@@ -1,5 +1,5 @@
 hex_colors = {
-    0:  {"Name": "Off", "Hex": '000000'},
+    0: {"Name": "Off", "Hex": '000000'},
     10: {"Name": "Blue", "Hex": '4a418a'},
     20: {"Name": "Candlelight", "Hex": 'ebb63e'},
     30: {"Name": "Cold sky", "Hex": 'dcf0f8'},
@@ -23,7 +23,7 @@ hex_colors = {
 }
 
 hex_whites = {
-    0:  {"Name": "Off", "Hex": '000000'},
+    0: {"Name": "Off", "Hex": '000000'},
     10: {"Name": "Cold", "Hex": 'f5faf6'},
     20: {"Name": "Normal", "Hex": 'f1e0b5'},
     30: {"Name": "Warm", "Hex": 'efd275'}

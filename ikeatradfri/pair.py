@@ -170,7 +170,7 @@ async def run(shutdown):
     # run until the outer loop says not to any more
     #
 
-    print (api_factory)
+    print(api_factory)
     await api_factory.shutdown(run)
     await shutdown
 

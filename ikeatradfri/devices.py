@@ -1,15 +1,8 @@
 from pytradfri import Gateway, const
-from pytradfri.api.aiocoap_api import APIFactory
-
-import asyncio
-import aiocoap
-import logging
 import json
 import colorsys
 
 from .exceptions import UnsupportedDeviceCommand
-
-
 
 
 class ikea_device(object):
@@ -78,7 +71,7 @@ class ikea_device(object):
     @property
     def device_has_hex(self):
         return self._device.light_control.can_set_xy
-    
+
     @property
     def hex(self):
         if self.device_has_hex:
@@ -97,12 +90,11 @@ class ikea_device(object):
             "Dimmable": self.device_dimmable,
             "HasWB": self.device_has_wb,
             "HasRGB": self.device_has_rgb}
-        
+
         if self.device_has_hex:
             descript["Hex"] = self.hex
 
         return descript
-        
 
     @property
     def raw(self):
@@ -120,33 +112,43 @@ class ikea_device(object):
 
     async def set_level(self, level, transition_time=10):
         if self.device_dimmable:
-            await self.api(self._device.light_control.set_dimmer(int(level), transition_time=transition_time))
+            await self.api(self._device.light_control.set_dimmer(
+                int(level), transition_time=transition_time))
         else:
             raise UnsupportedDeviceCommand
         await self.refresh()
 
     async def set_hex(self, hex, transition_time=10):
         if self.device_has_hex:
-            await self.api(self._device.light_control.set_hex_color(hex, transition_time=transition_time))
+            await self.api(self._device.light_control.set_hex_color(
+                hex, transition_time=transition_time))
         else:
             raise UnsupportedDeviceCommand
 
         await self.refresh()
 
-    async def set_hsb(self, hue, saturation, brightness=None, transition_time=10):
+    async def set_hsb(self, hue, saturation, brightness=None,
+                      transition_time=10):
         if brightness is not None:
             brightness = int(brightness)
 
-        await self.api(self._device.light_control.set_hsb(int(hue), int(saturation), brightness, transition_time=transition_time))
+        await self.api(
+            self._device.
+            light_control.set_hsb(int(hue),
+                                  int(saturation), brightness,
+                                  transition_time=transition_time))
 
     async def set_rgb(self, red, green, blue):
         h, s, b = colorsys.rgb_to_hsv(red / 255, green / 255, blue / 255)
         print(h, s, b)
-        await self.set_hsb(h * const.RANGE_HUE[1], s * const.RANGE_SATURATION[1], b * const.RANGE_BRIGHTNESS[1])
+        await self.set_hsb(h * const.RANGE_HUE[1],
+                           s * const.RANGE_SATURATION[1],
+                           b * const.RANGE_BRIGHTNESS[1])
 
     async def refresh(self):
         gateway = Gateway()
-        self.__init__(await self.api(gateway.get_device(int(self.device_id))), self.api)
+        self.__init__(await self.api(gateway.get_device(
+            int(self.device_id))), self.api)
 
 
 class ikea_group(object):
@@ -169,7 +171,7 @@ class ikea_group(object):
     async def set_state(self, state):
         await self._api(self._group.set_state(state))
         await self.refresh()
-        
+
     async def set_level(self, level, transition_time=10):
         await self._api(self._group.set_dimmer(level, transition_time))
         await self.refresh()
@@ -179,7 +181,8 @@ class ikea_group(object):
 
     async def refresh(self):
         gateway = Gateway()
-        self.__init__(await self._api(gateway.get_group(int(self._group.id))), self._api)
+        self.__init__(await self._api(
+            gateway.get_group(int(self._group.id))), self._api)
 
 
 async def get_device(api, gateway, id):

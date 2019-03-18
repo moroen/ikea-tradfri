@@ -1,5 +1,6 @@
 import argparse
 
+
 def check_level(value):
     try:
         value = int(value)
@@ -9,6 +10,7 @@ def check_level(value):
         return value
     else:
         raise argparse.ArgumentTypeError("Invalid level value")
+
 
 def getArgs():
     parser = argparse.ArgumentParser()
@@ -30,13 +32,17 @@ def getArgs():
 
     subparsers.add_parser("list")
     subparsers.add_parser("test")
-    
+
     # subparsers.add_parser("pair")
 
     parser_level = subparsers.add_parser("level")
     parser_level.add_argument("ID")
     parser_level.add_argument("value", type=check_level)
-    parser_level.add_argument("--transition_time", nargs='?', default=10, type=int)
+    parser_level.add_argument(
+        "--transition_time",
+        nargs='?',
+        default=10,
+        type=int)
 
     parser_colortemp = subparsers.add_parser("whitetemp")
     parser_colortemp.add_argument("ID")
@@ -57,7 +63,7 @@ def getArgs():
     parser_rgb.add_argument("red", type=int)
     parser_rgb.add_argument("green", type=int)
     parser_rgb.add_argument("blue", type=int)
-    
+
     subparsers.add_parser("raw").add_argument("ID")
 
     subparsers.add_parser("observe")
