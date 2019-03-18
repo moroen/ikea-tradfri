@@ -16,5 +16,5 @@ async def listDevices(api, gateway):
 
     print("\nGroups:")
     for aGroup in groups:
-        print(aGroup)
+        print("{0}: {1}".format(aGroup.id, aGroup.name))
     return

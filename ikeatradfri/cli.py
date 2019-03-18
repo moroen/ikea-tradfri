@@ -39,6 +39,7 @@ def getArgs():
     parser_level.add_argument("--transition_time", nargs='?', default=10, type=int)
 
     parser_colortemp = subparsers.add_parser("whitetemp")
+    parser_colortemp.add_argument("ID")
     parser_colortemp.add_argument("value", choices=['cold', 'normal', 'warm'])
 
     parser_hex = subparsers.add_parser("hex")

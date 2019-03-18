@@ -10,6 +10,8 @@ import colorsys
 from .exceptions import UnsupportedDeviceCommand
 
 
+
+
 class ikea_device(object):
     _device = None
 
@@ -167,6 +169,13 @@ class ikea_group(object):
     async def set_state(self, state):
         await self._api(self._group.set_state(state))
         await self.refresh()
+        
+    async def set_level(self, level, transition_time=10):
+        await self._api(self._group.set_dimmer(level, transition_time))
+        await self.refresh()
+
+    async def set_hex(self, hex, transition_time=10):
+        print(hex)
 
     async def refresh(self):
         gateway = Gateway()
@@ -200,8 +209,6 @@ async def getDevices(api, gateway):
             others.append(aDevice)
 
     groups = await api(await api(gateway.get_groups()))
-    print(groups)
-
     return (lights, outlets, groups, others)
 
 # async def setDeviceState(api, gateway, id, state):

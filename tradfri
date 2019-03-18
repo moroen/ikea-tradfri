@@ -1,18 +1,9 @@
 #!/usr/bin/env python3
-
-import argparse
 import asyncio
-import configparser
-import functools
-import json
 import logging
-import os
-import signal
-import uuid
 
 from ikeatradfri import cli, config, console, devices, exceptions
 
-import aiocoap
 from pytradfri import Gateway
 from pytradfri.api.aiocoap_api import APIFactory
 from pytradfri import error as pyerror
@@ -55,12 +46,20 @@ async def run(args):
             await device.set_level(args.value,
                                    transition_time=args.transition_time)
 
+        if args.command == "whitetemp":
+            device = await devices.get_device(api, gateway, args.ID)
+            from ikeatradfri.colors import hex_whites
+            for key, a in hex_whites.items():
+                if a["Name"].lower() == args.value.lower():
+                    await device.set_hex(a["Hex"])
+                    break
+
     except devices.UnsupportedDeviceCommand:
         logging.error("Unsupported command '{0}' for device {1}".format(
             args.command,
             args.ID
-            ))
-    except:
+        ))
+    except Exception:
         raise
 
     if args.command == "list":
@@ -94,10 +93,12 @@ async def run(args):
 
     await api_factory.shutdown()
 
-def exception_handler(loop,context):
-   print("Caught the following exception")
-   print(context['message'])
-   #print(context['exception'])
+
+def exception_handler(loop, context):
+    print("Caught the following exception")
+    print(context['message'])
+    # print(context['exception'])
+
 
 if __name__ == "__main__":
     args = cli.getArgs()
@@ -121,7 +122,7 @@ if __name__ == "__main__":
             loop = asyncio.get_event_loop()
             # loop.create_task(Server.tcp_server(autostart=False).main())
             # loop.create_task(http_server.start())
-            loop.run_until_complete (Server.tcp_server(autostart=False).main())
+            loop.run_until_complete(Server.tcp_server(autostart=False).main())
         elif args.command == "http":
             from ikeatradfri import http_server as Server
             loop = asyncio.get_event_loop()
@@ -137,7 +138,7 @@ if __name__ == "__main__":
         print("Received exit, exiting")
     except CancelledError:
         logging.debug("Cancelled")
-        loop.stop()    
+        loop.stop()
     except exceptions.ConfigNotFound:
         print("NoConfig")
         pass
