@@ -1,4 +1,4 @@
-from pytradfri import Gateway, const
+from pytradfri import Gateway, const, error
 import json
 import colorsys
 
@@ -70,7 +70,10 @@ class ikea_device(object):
 
     @property
     def device_has_hex(self):
-        return self._device.light_control.can_set_xy
+        if self._device.has_light_control:
+            return self._device.light_control.can_set_xy
+        else:
+            return False
 
     @property
     def hex(self):
@@ -177,7 +180,10 @@ class ikea_group(object):
         await self.refresh()
 
     async def set_hex(self, hex, transition_time=10):
-        print(hex)
+        for aID in self._group.member_ids:
+            dev = await get_device(self._api, Gateway(), aID)
+            if dev.device_has_hex:
+                await dev.set_hex(hex, transition_time=transition_time)
 
     async def refresh(self):
         gateway = Gateway()
@@ -189,7 +195,7 @@ async def get_device(api, gateway, id):
     try:
         targetDevice = await api(gateway.get_device(int(id)))
         return ikea_device(targetDevice, api)
-    except json.decoder.JSONDecodeError:
+    except (error.ClientError, json.decoder.JSONDecodeError):
         # Is it a group?
         targetGroup = await api(gateway.get_group(int(id)))
         return ikea_group(targetGroup, api)
