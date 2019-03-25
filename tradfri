@@ -118,10 +118,10 @@ if __name__ == "__main__":
                             level=logging.DEBUG)
     else:
         logging.basicConfig(format='%(levelname)s:%(message)s',
-                            level=logging.INFO)
+                            level=logging.CRITICAL)
 
     loop = asyncio.get_event_loop()
-    # loop.set_exception_handler(exception_handler)
+    loop.set_exception_handler(exception_handler)
     # loop.set_debug(True)
 
     try:

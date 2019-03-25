@@ -1,24 +1,35 @@
-Python Script for controlling IKEA - Tradfri lights
+# Python Script for controlling IKEA - Tradfri lights
 
 
-# Requirements
-Requires https://github.com/ggravlingen/pytradfri
-Please use the libcoap (sync)-version of the library, instructions for installing it can be found in the repository readme.
+## Requirements
+Recommended python version: 3.6.x - 3.7.x
 
-# Usage
+## Setup
+```shell
+$ python3 setup.py install
+```
+
+## Configure connection
+
+```shell
+./tradfri config <IP> <KEY>
+```
+
+
+## Usage
 ```shell
 ./tradfri.py --help
 ```
 
-
-The script needs the gateway IP and key, this can be set with the --gateway and --key options. This is only needed on first use, run the command from the directory the script is located, and the ini-file will be created:
-
+### List all devices
 ```shell
-./tradfri.py --gateway IP --key KEY list
+./tradfri list
 ```
 
-# Domoticz
-Use from on and off action of a virtual switch
-```
-script://python/tradfri.py <id> on/off
+### Controll a light
+```shell
+./tradfri on <ID>
+./tradfri off <ID>
+./tradfri level <ID> <LEVEL> (Level: 0-254)
+./tradfri wb <ID> <WHITEBALANCE> (Whitebalance: cold/normal/warm)
 ```
