@@ -46,7 +46,7 @@ async def run(args):
             await device.set_level(args.value,
                                    transition_time=args.transition_time)
 
-        if args.command == "whitetemp":
+        if args.command == "wb":
             device = await devices.get_device(api, gateway, args.ID)
             from ikeatradfri.colors import hex_whites
             for key, a in hex_whites.items():
@@ -90,6 +90,16 @@ async def run(args):
 
     if args.command == "test":
         device = await devices.get_device(api, gateway, 65547)
+
+    if args.command == "color":
+        from ikeatradfri.colors import hex_colors
+        if args.color_command == "list":
+            for key, a in hex_colors.items():
+                print ("{0}: {1}".format(key, a["Name"]))
+
+        if args.color_command == "set":
+            device = await devices.get_device(api, gateway, args.ID)
+            await device.set_hex(hex_colors[int(args.color)]["Hex"])
 
     await api_factory.shutdown()
 

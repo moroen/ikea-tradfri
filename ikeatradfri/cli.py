@@ -44,7 +44,7 @@ def getArgs():
         default=10,
         type=int)
 
-    parser_colortemp = subparsers.add_parser("whitetemp")
+    parser_colortemp = subparsers.add_parser("wb")
     parser_colortemp.add_argument("ID")
     parser_colortemp.add_argument("value", choices=['cold', 'normal', 'warm'])
 
@@ -67,5 +67,14 @@ def getArgs():
     subparsers.add_parser("raw").add_argument("ID")
 
     subparsers.add_parser("observe")
+
+    parser_color = subparsers.add_parser("color")
+    subparser_color = parser_color.add_subparsers(dest="color_command")
+    subparser_color.add_parser("list")
+    parser_set_color = subparser_color.add_parser("set")
+    parser_set_color.add_argument("ID")
+    parser_set_color.add_argument("color")
+
+    
 
     return parser.parse_args()
