@@ -63,7 +63,7 @@ async def run(args):
         raise
 
     if args.command == "list":
-        await console.listDevices(api, gateway)
+        await console.list_devices(api, gateway)
 
     if args.command == "pair":
         from ikeatradfri import pair
@@ -95,7 +95,7 @@ async def run(args):
         from ikeatradfri.colors import hex_colors
         if args.color_command == "list":
             for key, a in hex_colors.items():
-                print ("{0}: {1}".format(key, a["Name"]))
+                print("{0}: {1}".format(key, a["Name"]))
 
         if args.color_command == "set":
             device = await devices.get_device(api, gateway, args.ID)
@@ -136,6 +136,15 @@ if __name__ == "__main__":
             loop = asyncio.get_event_loop()
             # loop.create_task(Server.start())
             loop.run_until_complete(Server.start())
+        elif args.command == "gui":
+            import wx
+            from wxasync import AsyncBind, WxAsyncApp, StartCoroutine
+            from ikeatradfri import gui
+
+            app = WxAsyncApp()
+            frame = gui.MainWindow()
+            loop = asyncio.get_event_loop()
+            loop.run_until_complete(app.MainLoop())
         elif args.command == "observe":
             from ikeatradfri import observe
             loop.create_task(observe.observe())

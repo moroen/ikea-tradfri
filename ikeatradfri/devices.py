@@ -27,6 +27,10 @@ class ikea_device(object):
         return self._device.name
 
     @property
+    def device_model(self):
+        return self._device.device_info.model_number
+
+    @property
     def device_type(self):
         if self._device.has_light_control:
             return "Light"
@@ -53,6 +57,10 @@ class ikea_device(object):
             return None
 
         return self._device.light_control.lights[0].dimmer
+
+    @property
+    def battery_level(self):
+        return self._device.device_info.battery_level
 
     @property
     def device_has_wb(self):
@@ -201,7 +209,7 @@ async def get_device(api, gateway, id):
         return ikea_group(targetGroup, api)
 
 
-async def getDevices(api, gateway):
+async def get_devices(api, gateway):
     devices = await api(await api(gateway.get_devices()))
 
     lights = []
@@ -211,13 +219,15 @@ async def getDevices(api, gateway):
 
     for aDevice in sorted(devices, key=lambda device: device.id):
         if aDevice.has_light_control:
-            lights.append(aDevice)
+            lights.append(ikea_device(aDevice, api))
         elif aDevice.has_socket_control:
-            outlets.append(aDevice)
+            outlets.append(ikea_device(aDevice, api))
         else:
-            others.append(aDevice)
+            others.append(ikea_device(aDevice, api))
 
-    groups = await api(await api(gateway.get_groups()))
+    all_groups = await api(await api(gateway.get_groups()))
+    for group in all_groups:
+        groups.append(ikea_group(group, api))
     return (lights, outlets, groups, others)
 
 # async def setDeviceState(api, gateway, id, state):

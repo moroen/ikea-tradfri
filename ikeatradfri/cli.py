@@ -29,6 +29,7 @@ def getArgs():
 
     subparsers.add_parser("server")
     subparsers.add_parser("http")
+    subparsers.add_parser("gui")
 
     subparsers.add_parser("list")
     subparsers.add_parser("test")
@@ -74,7 +75,5 @@ def getArgs():
     parser_set_color = subparser_color.add_parser("set")
     parser_set_color.add_argument("ID")
     parser_set_color.add_argument("color")
-
-    
 
     return parser.parse_args()
