@@ -1,6 +1,7 @@
 from aiohttp import web
 import asyncio
 import signal
+import logging
 
 if __name__ == "__main__":
     import config
@@ -31,14 +32,14 @@ async def start():
     await runner.setup()
     site = web.TCPSite(runner, 'localhost', PORT)
 
-    print("Starting IKEA-Tradfri server on localhost:{0}".format(PORT))
+    logging.info("Starting IKEA-Tradfri HTTP server on localhost:{0}".format(PORT))
 
     await site.start()
 
 
 async def ask_exit(signame):
     global APP_FACTORY
-    print("Received signal %s: exiting" % signame)
+    logging.info("Stopping HTTP-Server")
     await APP_FACTORY.shutdown()
     loop = asyncio.get_event_loop()
     loop.stop()
@@ -50,4 +51,4 @@ if __name__ == "__main__":
     try:
         loop.run_forever()
     except KeyboardInterrupt:
-        print("Received exit, exiting")
+        loop.info("Received exit, exiting")

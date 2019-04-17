@@ -5,23 +5,24 @@ async def list_devices(api, gateway):
     lights, outlets, groups, others = await get_devices(api, gateway)
     print("Lights:")
     for aDevice in lights:
-        print("{0}: {1} ({2}) - {3}".
-              format(aDevice.device_id, aDevice.device_name,
-                     aDevice.device_model,
-                     aDevice.state))
+        print("{0}: {1} ({2}) - {3} - {4}".
+              format(aDevice.id, aDevice.name,
+                     aDevice.model,
+                     aDevice.state,
+                     aDevice.hex))
 
     print("\nSockets:")
     for aDevice in outlets:
         print("{0}: {1} ({2}) - {3}".
-              format(aDevice.device_id, aDevice.device_name,
-                     aDevice.device_model,
+              format(aDevice.id, aDevice.name,
+                     aDevice.model,
                      aDevice.state))
 
     print("\nDevices:")
     for aDevice in others:
         print("{0}: {1} ({2}) - {3}".
-              format(aDevice.device_id, aDevice.device_name,
-                     aDevice.device_model,
+              format(aDevice.id, aDevice.name,
+                     aDevice.model,
                      aDevice.battery_level))
 
     print("\nGroups:")

@@ -19,9 +19,8 @@ class tcp_server():
 
     _transition_time = 10
 
-    def __init__(self, autostart=True):
-        if autostart:
-            self.start_tcp_server()
+    def __init__(self):
+        pass
 
     async def handle_echo(self, reader, writer):
         while True:
@@ -73,52 +72,22 @@ class tcp_server():
 
     async def send_devices_list(self, command):
         try:
-            lights, sockets, groups, others = await Devices.getDevices(
+            lights, sockets, groups, others = await Devices.get_devices(
                 self._api, self._gateway)
 
             devices = []
 
             for aDevice in lights:
-                devices.append({"DeviceID": aDevice.id,
-                                "Name": aDevice.name,
-                                "Type": "Light",
-                                "Dimmable":
-                                aDevice.light_control.can_set_dimmer,
-                                "HasWB": aDevice.light_control.can_set_temp,
-                                "HasRGB": aDevice.light_control.can_set_xy,
-                                "State": aDevice.light_control.lights[0].state,
-                                "Level":
-                                aDevice.light_control.lights[0].dimmer,
-                                "Hex":
-                                aDevice.light_control.lights[0].hex_color})
+                devices.append(aDevice.description)
 
             for aDevice in sockets:
-                devices.append({"DeviceID": aDevice.id,
-                                "Name": aDevice.name,
-                                "Type": "Outlet",
-                                "Dimmable": False,
-                                "HasWB": False,
-                                "HasRGB": False,
-                                "State":
-                                aDevice.socket_control.sockets[0].state})
+                devices.append(aDevice.description)
 
             for aGroup in groups:
-                devices.append({"DeviceID": aGroup.id,
-                                "Name": aGroup.name,
-                                "Type": "Group",
-                                "Dimmable": True,
-                                "HasWB": False,
-                                "HasRGB": False,
-                                "State": aGroup.state,
-                                "Level": aGroup.dimmer})
+                devices.append(aGroup.description)
 
             for aDevice in others:
-                devices.append({"DeviceID": aDevice.id,
-                                "Name": aDevice.name,
-                                "Type": "Battery_Level",
-                                "Dimmable": False,
-                                "HasWB": False,
-                                "Level": aDevice.device_info.battery_level})
+                devices.append(aDevice.description)
 
             return return_object(
                 action="getDevices",
@@ -200,7 +169,7 @@ class tcp_server():
             logging.error("SgiteConfig-file not found")
 
         # Serve requests until Ctrl+C is pressed
-        logging.info('Serving on {}'.format(server.sockets[0].getsockname()))
+        logging.info('Starting IKEA-Tradfri TCP server on {}'.format(server.sockets[0].getsockname()))
         # try:
         loop.run_forever()
         # except KeyboardInterrupt:
@@ -221,6 +190,6 @@ class tcp_server():
             self.handle_echo, '127.0.0.1', 1234)
 
         addr = self._server.sockets[0].getsockname()
-        logging.info(f'Serving on {addr}')
+        logging.info('Starting IKEA-Tradfri TCP server on {}'.format(addr))
 
         await self._server.serve_forever()

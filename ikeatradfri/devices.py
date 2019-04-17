@@ -19,15 +19,15 @@ class ikea_device(object):
         # self.lastWB = device.light_control.lights[0].hex_color
 
     @property
-    def device_id(self):
+    def id(self):
         return self._device.id
 
     @property
-    def device_name(self):
+    def name(self):
         return self._device.name
 
     @property
-    def device_model(self):
+    def model(self):
         return self._device.device_info.model_number
 
     @property
@@ -36,6 +36,8 @@ class ikea_device(object):
             return "Light"
         if self._device.has_socket_control:
             return "Outlet"
+        if self._device.device_info.power_source == 3:
+            return "Remote"
 
     @property
     def state(self):
@@ -45,7 +47,7 @@ class ikea_device(object):
             return self._device.socket_control.sockets[0].state
 
     @property
-    def device_dimmable(self):
+    def dimmable(self):
         if self._device.has_light_control:
             return self._device.light_control.can_set_dimmer
         else:
@@ -53,7 +55,7 @@ class ikea_device(object):
 
     @property
     def level(self):
-        if not self.device_dimmable:
+        if not self.dimmable:
             return None
 
         return self._device.light_control.lights[0].dimmer
@@ -63,21 +65,15 @@ class ikea_device(object):
         return self._device.device_info.battery_level
 
     @property
-    def device_has_wb(self):
-        if self._device.has_light_control:
-            return self._device.light_control.can_set_temp
-        else:
-            return False
-
+    def colorspace(self):
+        if "CWS" in self.model:
+            return "CWS"
+        if "WS" in self.model:
+            return "WS"
+        return "W"
+    
     @property
-    def device_has_rgb(self):
-        if self._device.has_light_control:
-            return self._device.light_control.can_set_xy
-        else:
-            return False
-
-    @property
-    def device_has_hex(self):
+    def has_hex(self):
         if self._device.has_light_control:
             return self._device.light_control.can_set_xy
         else:
@@ -85,7 +81,7 @@ class ikea_device(object):
 
     @property
     def hex(self):
-        if self.device_has_hex:
+        if self.has_hex:
             return self._device.light_control.lights[0].hex_color
         else:
             return None
@@ -93,17 +89,14 @@ class ikea_device(object):
     @property
     def description(self):
         descript = {
-            "DeviceID": self.device_id,
-            "Name": self.device_name,
+            "DeviceID": self.id,
+            "Name": self.name,
             "State": self.state,
             "Level": self.level,
             "Type": self.device_type,
-            "Dimmable": self.device_dimmable,
-            "HasWB": self.device_has_wb,
-            "HasRGB": self.device_has_rgb}
-
-        if self.device_has_hex:
-            descript["Hex"] = self.hex
+            "Dimmable": self.dimmable,
+            "Colorspace": self.colorspace,
+            "Hex": self.hex}
 
         return descript
 
@@ -122,7 +115,7 @@ class ikea_device(object):
         await self.refresh()
 
     async def set_level(self, level, transition_time=10):
-        if self.device_dimmable:
+        if self.dimmable:
             await self.api(self._device.light_control.set_dimmer(
                 int(level), transition_time=transition_time))
         else:
@@ -130,7 +123,7 @@ class ikea_device(object):
         await self.refresh()
 
     async def set_hex(self, hex, transition_time=10):
-        if self.device_has_hex:
+        if self.has_hex:
             await self.api(self._device.light_control.set_hex_color(
                 hex, transition_time=transition_time))
         else:
@@ -159,7 +152,7 @@ class ikea_device(object):
     async def refresh(self):
         gateway = Gateway()
         self.__init__(await self.api(gateway.get_device(
-            int(self.device_id))), self.api)
+            int(self.id))), self.api)
 
 
 class ikea_group(object):
@@ -174,10 +167,18 @@ class ikea_group(object):
                 "Name": self._group.name,
                 "Type": "Group",
                 "Dimmable": True,
-                "HasWB": False,
-                "HasRGB": False,
                 "State": self._group.state,
-                "Level": self._group.dimmer}
+                "Level": self._group.dimmer,
+                "Colorspace": self.colorspace,
+                "Hex": self.hex}
+
+    @property
+    def colorspace(self):
+        return "W"
+
+    @property
+    def hex(self):
+        return None
 
     async def set_state(self, state):
         await self._api(self._group.set_state(state))

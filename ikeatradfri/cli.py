@@ -16,6 +16,7 @@ def getArgs():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--debug", action='store_true')
+    parser.add_argument("--verbose", action='store_true')
 
     subparsers = parser.add_subparsers(dest="command")
     subparsers.required = False
@@ -24,12 +25,19 @@ def getArgs():
     parser_config.add_argument("IP")
     parser_config.add_argument("KEY")
 
+    parser_service = subparsers.add_parser("service").add_subparsers(dest="service_command")
+    # parser_service.required = True
+    parser_service_create = parser_service.add_parser("create")
+    parser_service_create.add_argument("--user")
+    parser_service_create.add_argument("--group")
+    
+
     subparsers.add_parser("on").add_argument("ID")
     subparsers.add_parser("off").add_argument("ID")
 
-    subparsers.add_parser("server")
-    subparsers.add_parser("http")
-    subparsers.add_parser("gui")
+    server_parser = subparsers.add_parser("server")
+    server_parser.add_argument("--tcp", action="store_true")
+    server_parser.add_argument("--http", action="store_true")
 
     subparsers.add_parser("list")
     subparsers.add_parser("test")
