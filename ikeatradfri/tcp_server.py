@@ -31,7 +31,7 @@ class tcp_server():
                 message = data.decode("utf-8")
                 addr = writer.get_extra_info('peername')
 
-                logging.info(f"Received {message!r} from {addr!r}")
+                logging.info("Received {} from {}".format(message, addr))
 
                 command = json.loads(message)
 
@@ -137,23 +137,6 @@ class tcp_server():
         devices.append(device.description)
         return return_object(action="setHex", status="Ok", result=devices)
 
-    async def handle_signals(self, loop):
-        for signame in {'SIGINT', 'SIGTERM'}:
-            logging.debug("Registering {}".format(signame))
-            loop.add_signal_handler(
-                getattr(signal, signame),
-                lambda: asyncio.ensure_future(self.ask_exit(signame)))
-
-    async def ask_exit(self, signame):
-        global _run_server
-        logging.info("Received signal %s: exiting" % signame)
-        loop = asyncio.get_event_loop()
-
-        logging.info("Stopping TCP-server")
-        self._server.close()
-        await self._server.wait_closed()
-        await asyncio.sleep(1)
-        loop.close()
 
     def start_tcp_server(self):
         loop = asyncio.get_event_loop()
@@ -164,26 +147,23 @@ class tcp_server():
             self.handle_echo, '127.0.0.1', 1234, loop=loop)
 
         try:
-            server = loop.run_until_complete(coro)
+            self._server = loop.run_until_complete(coro)
         except exceptions.ConfigNotFound:
             logging.error("SgiteConfig-file not found")
 
         # Serve requests until Ctrl+C is pressed
-        logging.info('Starting IKEA-Tradfri TCP server on {}'.format(server.sockets[0].getsockname()))
-        # try:
+        logging.info('Starting IKEA-Tradfri TCP server on {}'.format(self._server.sockets[0].getsockname()))
         loop.run_forever()
-        # except KeyboardInterrupt:
-        #    pass
-
+        
+        
         # Close the server
-        # server.close()
-        # loop.run_until_complete(server.wait_closed())
-        # loop.close()
+        #self._server.close()
+        #loop.run_until_complete(self._server.wait_closed())
+        #loop.close()
 
     async def main(self):
         loop = asyncio.get_event_loop()
-        await self.handle_signals(loop)
-
+        
         await config.getConfig()
 
         self._server = await asyncio.start_server(
@@ -192,4 +172,4 @@ class tcp_server():
         addr = self._server.sockets[0].getsockname()
         logging.info('Starting IKEA-Tradfri TCP server on {}'.format(addr))
 
-        await self._server.serve_forever()
+        # loop.run_until_complete(self._server)

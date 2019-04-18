@@ -2,7 +2,7 @@
 import asyncio
 import logging
 
-from ikeatradfri import cli, config, console, devices, exceptions
+from ikeatradfri import cli, config, console, devices, exceptions, signal_handler
 
 from pytradfri import Gateway
 from pytradfri.api.aiocoap_api import APIFactory
@@ -129,6 +129,8 @@ if __name__ == "__main__":
         loop.set_exception_handler(exception_handler)
     # loop.set_debug(True)
 
+    loop.create_task(signal_handler.handle_signals(loop))
+
     try:
         if args.command == "service":
             from ikeatradfri import service
@@ -143,13 +145,17 @@ if __name__ == "__main__":
             from ikeatradfri import http_server
             loop = asyncio.get_event_loop()
             if (not args.tcp) and args.http:
-                loop.create_task(http_server.start())
-                loop.run_forever()                
+                loop.create_task(http_server.start())              
             elif args.tcp and (not args.http):
-                loop.run_until_complete(tcp_server.tcp_server().main())
+                # tcp_server.tcp_server().start_tcp_server()
+                loop.create_task(tcp_server.tcp_server().main())
             else:
                 loop.create_task(http_server.start())
-                loop.run_until_complete(tcp_server.tcp_server().main())
+                loop.create_task(tcp_server.tcp_server().main())
+                # tcp_server.tcp_server().start_tcp_server()
+
+            loop.run_forever()
+
         elif args.command == "observe":
             from ikeatradfri import observe
             loop.create_task(observe.observe())

@@ -18,12 +18,6 @@ async def start():
     global APP_FACTORY
     loop = asyncio.get_event_loop()
 
-    # Signal handlers
-    for signame in {'SIGINT', 'SIGTERM'}:
-        loop.add_signal_handler(
-            getattr(signal, signame),
-            lambda: asyncio.ensure_future(ask_exit(signame)))
-
     app = web.Application()
     app["api"], app["gateway"], APP_FACTORY = await config.connectToGateway()
     app.add_routes(routes)
@@ -36,13 +30,6 @@ async def start():
 
     await site.start()
 
-
-async def ask_exit(signame):
-    global APP_FACTORY
-    logging.info("Stopping HTTP-Server")
-    await APP_FACTORY.shutdown()
-    loop = asyncio.get_event_loop()
-    loop.stop()
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
