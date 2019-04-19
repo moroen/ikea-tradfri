@@ -11,6 +11,7 @@ else:
     from .routes import routes
 
 PORT = 8085
+HOST = "127.0.0.1"
 APP_FACTORY = None
 
 
@@ -24,9 +25,9 @@ async def start():
 
     runner = web.AppRunner(app)
     await runner.setup()
-    site = web.TCPSite(runner, 'localhost', PORT)
+    site = web.TCPSite(runner, HOST, PORT)
 
-    logging.info("Starting IKEA-Tradfri HTTP server on localhost:{0}".format(PORT))
+    logging.info("Starting IKEA-Tradfri HTTP server on {0}:{1}".format(HOST, PORT))
 
     await site.start()
 

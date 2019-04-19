@@ -170,6 +170,6 @@ class tcp_server():
             self.handle_echo, '127.0.0.1', 1234)
 
         addr = self._server.sockets[0].getsockname()
-        logging.info('Starting IKEA-Tradfri TCP server on {}'.format(addr))
+        logging.info('Starting IKEA-Tradfri TCP server on {0}:{1}'.format(addr[0], addr[1]))
 
         # loop.run_until_complete(self._server)

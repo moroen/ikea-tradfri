@@ -23,5 +23,5 @@ async def shutdown(signame):
     
     list(map(lambda task: task.cancel(), tasks))
     results = await asyncio.gather(*tasks, return_exceptions=True)
-    logging.info('Finished awaiting cancelled tasks!')
+    logging.info('Closed all running tasks!')
     loop.stop()
