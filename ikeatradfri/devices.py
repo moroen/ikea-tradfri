@@ -98,6 +98,9 @@ class ikea_device(object):
             "Colorspace": self.colorspace,
             "Hex": self.hex}
 
+        if self._device.device_info.power_source == 3:
+            descript["Battery_Level"] = self.battery_level
+
         return descript
 
     @property

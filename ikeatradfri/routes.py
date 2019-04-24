@@ -20,27 +20,20 @@ async def index(request):
 @routes.get('/devices')
 async def listdevices(request):
     devices = []
-    lights, outlets, groups, others = await Devices.getDevices(
+    lights, outlets, groups, others = await Devices.get_devices(
         request.app["api"], request.app["gateway"])
 
     for aDevice in lights:
-        devices.append({"DeviceID": aDevice.id,
-                        "Name": aDevice.name,
-                        "Type": "Light",
-                        "Dimmable": aDevice.light_control.can_set_dimmer,
-                        "HasWB": aDevice.light_control.can_set_temp,
-                        "HasRGB": aDevice.light_control.can_set_xy})
+        devices.append(aDevice.description)
 
     for aDevice in outlets:
-        devices.append({"DeviceID": aDevice.id, "Name": aDevice.name,
-                        "Type": "Outlet",
-                        "Dimmable": False,
-                        "HasWB": False,
-                        "HasRGB": False})
+        devices.append(aDevice.description)
 
     for aGroup in groups:
-        devices.append(
-            {"DeviceID": aGroup.id, "Name": aGroup.name, "Type": "Group"})
+        devices.append(aGroup.description)
+
+    for aDevice in others:
+        devices.append(aDevice.description)
 
     return web.Response(text=json.dumps(devices))
 

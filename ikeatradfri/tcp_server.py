@@ -4,7 +4,7 @@ import logging
 import signal
 
 
-from . import config, devices as Devices, exceptions
+from . import config, devices as Devices, exceptions, signal_handler
 from .server_commands import return_object
 
 from pytradfri import error as Error
@@ -66,9 +66,12 @@ class tcp_server():
                 return
 
     async def init_gateway(self, command):
-        self._api, self._gateway, self._api_factory = \
-            await config.connectToGateway()
-        return return_object("initGateway", status="Ok")
+        try:
+            self._api, self._gateway, self._api_factory = \
+                await config.connectToGateway()
+            return return_object("initGateway", status="Ok")
+        except exceptions.ConfigNotFound:
+            return return_object("initGateway", status="Error", result="Config-file not found")
 
     async def send_devices_list(self, command):
         try:
@@ -138,33 +141,13 @@ class tcp_server():
         return return_object(action="setHex", status="Ok", result=devices)
 
 
-    def start_tcp_server(self):
-        loop = asyncio.get_event_loop()
-
-        loop.create_task(config.getConfig())
-        loop.create_task(self.handle_signals(loop))
-        coro = asyncio.start_server(
-            self.handle_echo, '127.0.0.1', 1234, loop=loop)
-
-        try:
-            self._server = loop.run_until_complete(coro)
-        except exceptions.ConfigNotFound:
-            logging.error("SgiteConfig-file not found")
-
-        # Serve requests until Ctrl+C is pressed
-        logging.info('Starting IKEA-Tradfri TCP server on {}'.format(self._server.sockets[0].getsockname()))
-        loop.run_forever()
-        
-        
-        # Close the server
-        #self._server.close()
-        #loop.run_until_complete(self._server.wait_closed())
-        #loop.close()
-
     async def main(self):
         loop = asyncio.get_event_loop()
         
-        await config.getConfig()
+        try:
+            await config.getConfig()
+        except exceptions.ConfigNotFound:
+            await signal_handler.shutdown("ERROR")
 
         self._server = await asyncio.start_server(
             self.handle_echo, '127.0.0.1', 1234)
