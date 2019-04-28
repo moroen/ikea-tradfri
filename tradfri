@@ -145,13 +145,13 @@ if __name__ == "__main__":
             from ikeatradfri import http_server
             loop = asyncio.get_event_loop()
             if (not args.tcp) and args.http:
-                loop.create_task(http_server.start())              
+                loop.create_task(http_server.start(host=args.server_host, port=args.http_port))              
             elif args.tcp and (not args.http):
                 # tcp_server.tcp_server().start_tcp_server()
-                loop.create_task(tcp_server.tcp_server().main())
+                loop.create_task(tcp_server.tcp_server().main(host=args.server_host, port=args.tcp_port))
             else:
-                loop.create_task(http_server.start())
-                loop.create_task(tcp_server.tcp_server().main())
+                loop.create_task(http_server.start(host=args.server_host, port=args.http_port))
+                loop.create_task(tcp_server.tcp_server().main(host=args.server_host, port=args.tcp_port))
                 # tcp_server.tcp_server().start_tcp_server()
 
             loop.run_forever()

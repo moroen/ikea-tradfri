@@ -38,6 +38,10 @@ def getArgs():
     server_parser = subparsers.add_parser("server")
     server_parser.add_argument("--tcp", action="store_true")
     server_parser.add_argument("--http", action="store_true")
+    server_parser.add_argument("--host", dest="server_host")
+    server_parser.add_argument("--http-port", dest="http_port")
+    server_parser.add_argument("--tcp-port", dest="tcp_port")
+    
 
     subparsers.add_parser("list")
     subparsers.add_parser("test")

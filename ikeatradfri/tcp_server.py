@@ -9,6 +9,8 @@ from .server_commands import return_object
 
 from pytradfri import error as Error
 
+HOST = "127.0.0.1"
+PORT = 1234
 
 class tcp_server():
     _api = None
@@ -141,7 +143,7 @@ class tcp_server():
         return return_object(action="setHex", status="Ok", result=devices)
 
 
-    async def main(self):
+    async def main(self, host=None, port=PORT):
         loop = asyncio.get_event_loop()
         
         try:
@@ -149,8 +151,14 @@ class tcp_server():
         except exceptions.ConfigNotFound:
             await signal_handler.shutdown("ERROR")
 
+        
+        if host is None:
+            host=HOST
+        if port is None:
+            port=PORT
+
         self._server = await asyncio.start_server(
-            self.handle_echo, '127.0.0.1', 1234)
+            self.handle_echo, host, port)
 
         addr = self._server.sockets[0].getsockname()
         logging.info('Starting IKEA-Tradfri TCP server on {0}:{1}'.format(addr[0], addr[1]))

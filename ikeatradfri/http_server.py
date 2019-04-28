@@ -11,7 +11,7 @@ HOST = "127.0.0.1"
 APP_FACTORY = None
 
 
-async def start():
+async def start(host=None, port=None):
     global APP_FACTORY
     loop = asyncio.get_event_loop()
 
@@ -23,9 +23,15 @@ async def start():
 
         runner = web.AppRunner(app)
         await runner.setup()
-        site = web.TCPSite(runner, HOST, PORT)
+        
+        if host is None:
+            host = HOST
+        if port is None:
+            port = PORT
+        
+        site = web.TCPSite(runner, host, port)
 
-        logging.info("Starting IKEA-Tradfri HTTP server on {0}:{1}".format(HOST, PORT))
+        logging.info("Starting IKEA-Tradfri HTTP server on {0}:{1}".format(host, port))
         await site.start()
 
     except exceptions.ConfigNotFound:
