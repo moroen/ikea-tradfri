@@ -24,4 +24,4 @@ RUN ./tradfri config $ip $key
 
 WORKDIR /root
 RUN rm -rf ikea-tradfri
-CMD tradfri --verbose server
+CMD tradfri server --host=0.0.0.0
