@@ -183,6 +183,10 @@ class ikea_group(object):
     def hex(self):
         return None
 
+    @property
+    def raw(self):
+        return self._group.raw
+
     async def set_state(self, state):
         await self._api(self._group.set_state(state))
         await self.refresh()

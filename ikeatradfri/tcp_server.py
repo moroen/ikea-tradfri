@@ -25,6 +25,7 @@ class tcp_server():
         pass
 
     async def handle_echo(self, reader, writer):
+        logging.info("Connected from {}".format(writer.get_extra_info('peername')))
         while True:
 
             data = await reader.readline()
@@ -88,11 +89,13 @@ class tcp_server():
             for aDevice in sockets:
                 devices.append(aDevice.description)
 
-            for aGroup in groups:
-                devices.append(aGroup.description)
+            if command["groups"] == "True":
+                for aGroup in groups:
+                    devices.append(aGroup.description)
 
-            for aDevice in others:
-                devices.append(aDevice.description)
+            if command["battery_levels"] == "True":
+                for aDevice in others:
+                    devices.append(aDevice.description)
 
             return return_object(
                 action="getDevices",

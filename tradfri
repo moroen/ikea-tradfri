@@ -51,7 +51,7 @@ async def run(args):
             from ikeatradfri.colors import hex_whites
             for key, a in hex_whites.items():
                 if a["Name"].lower() == args.value.lower():
-                    await device.set_hex(a["Hex"])
+                    await device.set_hex(a["Hex"], args.transition_time)
                     break
 
     except devices.UnsupportedDeviceCommand:
@@ -129,8 +129,6 @@ if __name__ == "__main__":
         loop.set_exception_handler(exception_handler)
     # loop.set_debug(True)
 
-    loop.create_task(signal_handler.handle_signals(loop))
-
     try:
         if args.command == "service":
             from ikeatradfri import service
@@ -143,7 +141,10 @@ if __name__ == "__main__":
         if args.command == "server":
             from ikeatradfri import tcp_server
             from ikeatradfri import http_server
+            
             loop = asyncio.get_event_loop()
+            loop.create_task(signal_handler.handle_signals(loop))
+
             if (not args.tcp) and args.http:
                 loop.create_task(http_server.start(host=args.server_host, port=args.http_port))              
             elif args.tcp and (not args.http):
@@ -158,6 +159,7 @@ if __name__ == "__main__":
 
         elif args.command == "observe":
             from ikeatradfri import observe
+            loop.create_task(signal_handler.handle_signals(loop))
             loop.create_task(observe.observe())
             loop.run_forever()
         else:
