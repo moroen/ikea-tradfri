@@ -4,11 +4,10 @@ from string import Template
 def show_service_file():
     try:
         service_file = "{0}/ikea-tradfri.service".format(os.getcwd())
-        print (service_file)
         with open(service_file, 'r') as fin:
             print(fin.read(), end="")
     except FileNotFoundError:
-        print("Error: No ikea-tradfri.service-file found!\nGenerate file with 'configure.py service create'")
+        print("Error: No ikea-tradfri.service-file found!\nGenerate file with 'tradfri service create'")
 
 def create_service_file(user=None, group=None):
     tradfri_binary = shutil.which("tradfri")

@@ -1,4 +1,4 @@
-import argparse
+import argparse,sys
 
 
 def check_level(value):
@@ -19,7 +19,7 @@ def getArgs():
     parser.add_argument("--verbose", action='store_true')
 
     subparsers = parser.add_subparsers(dest="command")
-    subparsers.required = False
+    subparsers.required = True
 
     parser_config = subparsers.add_parser("config")
     parser_config.add_argument("IP")

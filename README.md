@@ -2,7 +2,14 @@
 
 
 ## Requirements
-Recommended python version: 3.6.x - 3.7.x
+Recommended python version: 3.5.3 - 3.7.3
+
+## Pre install
+Latest version of PIP and setuptools are needed:
+```shell
+$ pip install --upgrade pip
+$ pip install --upgrade setuptools
+```
 
 ## Setup
 ```shell

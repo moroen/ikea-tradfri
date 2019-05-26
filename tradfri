@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import asyncio
-import logging
+import logging,sys
 
 from ikeatradfri import cli, config, console, devices, exceptions, signal_handler
 
@@ -112,6 +112,7 @@ def exception_handler(loop, context):
 
 
 if __name__ == "__main__":
+    
     args = cli.getArgs()
 
     if args.debug:
@@ -173,6 +174,6 @@ if __name__ == "__main__":
         print("NoConfig")
         pass
     except pyerror.ServerError:
-        logging.error("Gateway error!")
+        logging.critical("Gateway error!")
     except pyerror.RequestTimeout:
         logging.error("Gateway error: Timeout")
