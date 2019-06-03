@@ -18,8 +18,7 @@ async def getConfig(args=None):
     hostConfig = {}
     showConfig = False
 
-    CONFIGFILE = "{0}/gateway.json".format(
-        appdirs.user_config_dir(appname="tradfri"))
+    CONFIGFILE = "{0}/gateway.json".format(appdirs.user_config_dir(appname="tradfri"))
     logging.debug("Looking for config: {}".format(CONFIGFILE))
 
     # print(CONFIGFILE)
@@ -40,7 +39,7 @@ async def getConfig(args=None):
             if not os.path.exists(CONFDIR):
                 os.makedirs(CONFDIR)
 
-            with open(CONFIGFILE, 'w') as outfile:
+            with open(CONFIGFILE, "w") as outfile:
                 json.dump(hostConfig, outfile)
 
             print("Config created!")
@@ -63,9 +62,8 @@ async def connectToGateway(storeConfig=False):
     hostConfig = await getConfig()
 
     api_factory = APIFactory(
-        hostConfig["Gateway"],
-        hostConfig["Identity"],
-        hostConfig["Passkey"])
+        hostConfig["Gateway"], hostConfig["Identity"], hostConfig["Passkey"]
+    )
     api = api_factory.request
     gateway = Gateway()
 

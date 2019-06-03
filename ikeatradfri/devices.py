@@ -1,6 +1,7 @@
 from pytradfri import Gateway, const, error
 import json
 import colorsys
+import logging
 
 from .exceptions import UnsupportedDeviceCommand
 
@@ -71,7 +72,7 @@ class ikea_device(object):
         if "WS" in self.model:
             return "WS"
         return "W"
-    
+
     @property
     def has_hex(self):
         if self._device.has_light_control:
@@ -96,7 +97,8 @@ class ikea_device(object):
             "Type": self.device_type,
             "Dimmable": self.dimmable,
             "Colorspace": self.colorspace,
-            "Hex": self.hex}
+            "Hex": self.hex,
+        }
 
         if self._device.device_info.power_source == 3:
             descript["Battery_Level"] = self.battery_level
@@ -119,61 +121,85 @@ class ikea_device(object):
 
     async def set_level(self, level, transition_time=10):
         if self.dimmable:
-            await self.api(self._device.light_control.set_dimmer(
-                int(level), transition_time=transition_time))
+            await self.api(
+                self._device.light_control.set_dimmer(
+                    int(level), transition_time=transition_time
+                )
+            )
         else:
             raise UnsupportedDeviceCommand
         await self.refresh()
 
     async def set_hex(self, hex, transition_time=10):
         if self.has_hex:
-            await self.api(self._device.light_control.set_hex_color(
-                hex, transition_time=transition_time))
+            await self.api(
+                self._device.light_control.set_hex_color(
+                    hex, transition_time=transition_time
+                )
+            )
         else:
             raise UnsupportedDeviceCommand
 
         await self.refresh()
 
-    async def set_hsb(self, hue, saturation, brightness=None,
-                      transition_time=10):
+    async def set_hsb(self, hue, saturation, brightness=None, transition_time=10):
         if brightness is not None:
             brightness = int(brightness)
 
         await self.api(
-            self._device.
-            light_control.set_hsb(int(hue),
-                                  int(saturation), brightness,
-                                  transition_time=transition_time))
+            self._device.light_control.set_hsb(
+                int(hue), int(saturation), brightness, transition_time=transition_time
+            )
+        )
 
     async def set_rgb(self, red, green, blue):
         h, s, b = colorsys.rgb_to_hsv(red / 255, green / 255, blue / 255)
         print(h, s, b)
-        await self.set_hsb(h * const.RANGE_HUE[1],
-                           s * const.RANGE_SATURATION[1],
-                           b * const.RANGE_BRIGHTNESS[1])
+        await self.set_hsb(
+            h * const.RANGE_HUE[1],
+            s * const.RANGE_SATURATION[1],
+            b * const.RANGE_BRIGHTNESS[1],
+        )
 
     async def refresh(self):
         gateway = Gateway()
-        self.__init__(await self.api(gateway.get_device(
-            int(self.id))), self.api)
+        self.__init__(await self.api(gateway.get_device(int(self.id))), self.api)
 
 
 class ikea_group(object):
-
-    def __init__(self, group, api):
+    def __init__(self, group, members, api):
         self._group = group
         self._api = api
+        self._members = members
 
     @property
     def description(self):
-        return {"DeviceID": self._group.id,
-                "Name": self._group.name,
-                "Type": "Group",
-                "Dimmable": True,
-                "State": self._group.state,
-                "Level": self._group.dimmer,
-                "Colorspace": self.colorspace,
-                "Hex": self.hex}
+        return {
+            "DeviceID": self._group.id,
+            "Name": self._group.name,
+            "Type": "Group",
+            "Dimmable": True,
+            "State": self._group.state,
+            "Level": self.level,
+            "Colorspace": self.colorspace,
+            "Hex": self.hex,
+        }
+
+    @property
+    def members(self):
+        return self._members
+
+    @property
+    def level(self):
+        from statistics import mean
+
+        member_levels = [
+            member.level for member in self._members if member.level is not None
+        ]
+        if len(member_levels) > 0:
+            return int(mean(member_levels))
+        else:
+            return self._group.dimmer
 
     @property
     def colorspace(self):
@@ -202,9 +228,8 @@ class ikea_group(object):
                 await dev.set_hex(hex, transition_time=transition_time)
 
     async def refresh(self):
-        gateway = Gateway()
-        self.__init__(await self._api(
-            gateway.get_group(int(self._group.id))), self._api)
+        for aMember in self._members:
+            await aMember.refresh()
 
 
 async def get_device(api, gateway, id):
@@ -213,8 +238,12 @@ async def get_device(api, gateway, id):
         return ikea_device(targetDevice, api)
     except (error.ClientError, json.decoder.JSONDecodeError):
         # Is it a group?
+        members = []
         targetGroup = await api(gateway.get_group(int(id)))
-        return ikea_group(targetGroup, api)
+        for aMember in targetGroup.members():
+            members.append(ikea_device(await api(aMember), api))
+
+        return ikea_group(targetGroup, members, api)
 
 
 async def get_devices(api, gateway):
@@ -235,17 +264,11 @@ async def get_devices(api, gateway):
 
     all_groups = await api(await api(gateway.get_groups()))
     for group in all_groups:
-        groups.append(ikea_group(group, api))
+        members = []
+
+        for aMember in group.members():
+            members.append(ikea_device(await api(aMember), api))
+
+        groups.append(ikea_group(group, members, api))
+
     return (lights, outlets, groups, others)
-
-# async def setDeviceState(api, gateway, id, state):
-#     device = await api(gateway.get_device(str(id)))
-
-#     if device.has_light_control:
-#         await api(device.light_control.set_state(state))
-#     elif device.has_socket_control:
-#         await api(device.socket_control.set_state(state))
-
-# async def setDeviceLevel(api, gateway, id, value):
-#     device = await api(gateway.get_device(str(id)))
-#     await api(device.light_control.set_dimmer(int(value)))

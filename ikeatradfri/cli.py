@@ -1,4 +1,4 @@
-import argparse,sys
+import argparse, sys
 
 
 def check_level(value):
@@ -15,8 +15,8 @@ def check_level(value):
 def getArgs():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--debug", action='store_true')
-    parser.add_argument("--verbose", action='store_true')
+    parser.add_argument("--debug", action="store_true")
+    parser.add_argument("--verbose", action="store_true")
 
     subparsers = parser.add_subparsers(dest="command")
     subparsers.required = True
@@ -25,12 +25,13 @@ def getArgs():
     parser_config.add_argument("IP")
     parser_config.add_argument("KEY")
 
-    parser_service = subparsers.add_parser("service").add_subparsers(dest="service_command")
+    parser_service = subparsers.add_parser("service").add_subparsers(
+        dest="service_command"
+    )
     # parser_service.required = True
     parser_service_create = parser_service.add_parser("create")
     parser_service_create.add_argument("--user")
     parser_service_create.add_argument("--group")
-    
 
     subparsers.add_parser("on").add_argument("ID")
     subparsers.add_parser("off").add_argument("ID")
@@ -41,9 +42,9 @@ def getArgs():
     server_parser.add_argument("--host", dest="server_host")
     server_parser.add_argument("--http-port", dest="http_port")
     server_parser.add_argument("--tcp-port", dest="tcp_port")
-    
 
-    subparsers.add_parser("list")
+    parser_list = subparsers.add_parser("list")
+    parser_list.add_argument("--expand-groups", action="store_true")
     subparsers.add_parser("test")
 
     # subparsers.add_parser("pair")
@@ -52,21 +53,15 @@ def getArgs():
     parser_level.add_argument("ID")
     parser_level.add_argument("value", type=check_level)
     parser_level.add_argument(
-        "--transition-time",
-        nargs='?',
-        default=10,
-        type=int,
-        dest="transition_time")
+        "--transition-time", nargs="?", default=10, type=int, dest="transition_time"
+    )
 
     parser_colortemp = subparsers.add_parser("wb")
     parser_colortemp.add_argument("ID")
-    parser_colortemp.add_argument("value", choices=['cold', 'normal', 'warm'])
+    parser_colortemp.add_argument("value", choices=["cold", "normal", "warm"])
     parser_colortemp.add_argument(
-        "--transition-time",
-        nargs='?',
-        default=10,
-        type=int,
-        dest="transition_time")
+        "--transition-time", nargs="?", default=10, type=int, dest="transition_time"
+    )
 
     parser_hex = subparsers.add_parser("hex")
     parser_hex.add_argument("ID")

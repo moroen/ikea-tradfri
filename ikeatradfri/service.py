@@ -1,19 +1,27 @@
 import getpass, os, shutil
 from string import Template
 
+
 def show_service_file():
     try:
         service_file = "{0}/ikea-tradfri.service".format(os.getcwd())
-        with open(service_file, 'r') as fin:
+        with open(service_file, "r") as fin:
             print(fin.read(), end="")
     except FileNotFoundError:
-        print("Error: No ikea-tradfri.service-file found!\nGenerate file with 'tradfri service create'")
+        print(
+            "Error: No ikea-tradfri.service-file found!\nGenerate file with 'tradfri service create'"
+        )
+
 
 def create_service_file(user=None, group=None):
     tradfri_binary = shutil.which("tradfri")
 
-    service = {"user": getpass.getuser(), 
-        "group": getpass.getuser(), "path": os.getcwd(), "tradfri": tradfri_binary}
+    service = {
+        "user": getpass.getuser(),
+        "group": getpass.getuser(),
+        "path": os.getcwd(),
+        "tradfri": tradfri_binary,
+    }
     if user is not None:
         service["user"] = user
         if group is None:
@@ -28,7 +36,7 @@ def create_service_file(user=None, group=None):
     src = Template(tpl)
     result = src.substitute(service)
     try:
-        with open('ikea-tradfri.service', 'w+') as f:
+        with open("ikea-tradfri.service", "w+") as f:
             f.write(result)
 
         print("ikea-tradfri.service created:")

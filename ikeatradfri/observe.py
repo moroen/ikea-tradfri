@@ -17,10 +17,10 @@ async def observe():
     loop = asyncio.get_event_loop()
 
     # Signal handlers
-    for signame in {'SIGINT', 'SIGTERM'}:
+    for signame in {"SIGINT", "SIGTERM"}:
         loop.add_signal_handler(
-            getattr(signal, signame),
-            lambda: asyncio.ensure_future(ask_exit(signame)))
+            getattr(signal, signame), lambda: asyncio.ensure_future(ask_exit(signame))
+        )
 
     api, gateway, APP_FACTORY = await config.connectToGateway()
 
@@ -30,13 +30,14 @@ async def observe():
         print("Received message for: %s" % light)
 
     def observe_err_callback(err):
-        print('observe error:', err)
+        print("observe error:", err)
 
     lights, _, _, _ = await Devices.getDevices(api, gateway)
 
     for light in lights:
         observe_command = light.observe(
-            observe_callback, observe_err_callback, duration=0)
+            observe_callback, observe_err_callback, duration=0
+        )
         # Start observation as a second task on the loop.
         asyncio.ensure_future(api(observe_command))
 
@@ -49,6 +50,7 @@ async def ask_exit(signame):
     await APP_FACTORY.shutdown()
     loop = asyncio.get_event_loop()
     loop.stop()
+
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import asyncio
-import logging,sys
+import logging, sys
 
 from ikeatradfri import cli, config, console, devices, exceptions, signal_handler
 
@@ -27,8 +27,9 @@ def hexToRgb(hex):
 async def run(args):
     hostConfig = await config.getConfig(args)
 
-    api_factory = APIFactory(hostConfig["Gateway"], hostConfig["Identity"],
-                             hostConfig["Passkey"])
+    api_factory = APIFactory(
+        hostConfig["Gateway"], hostConfig["Identity"], hostConfig["Passkey"]
+    )
     api = api_factory.request
     gateway = Gateway()
 
@@ -43,30 +44,30 @@ async def run(args):
 
         if args.command == "level":
             device = await devices.get_device(api, gateway, args.ID)
-            await device.set_level(args.value,
-                                   transition_time=args.transition_time)
+            await device.set_level(args.value, transition_time=args.transition_time)
 
         if args.command == "wb":
             device = await devices.get_device(api, gateway, args.ID)
             from ikeatradfri.colors import hex_whites
+
             for key, a in hex_whites.items():
                 if a["Name"].lower() == args.value.lower():
                     await device.set_hex(a["Hex"], args.transition_time)
                     break
 
     except devices.UnsupportedDeviceCommand:
-        logging.error("Unsupported command '{0}' for device {1}".format(
-            args.command,
-            args.ID
-        ))
+        logging.error(
+            "Unsupported command '{0}' for device {1}".format(args.command, args.ID)
+        )
     except Exception:
         raise
 
     if args.command == "list":
-        await console.list_devices(api, gateway)
+        await console.list_devices(api, gateway, expand_groups=args.expand_groups)
 
     if args.command == "pair":
         from ikeatradfri import pair
+
         shutdown = asyncio.Future()
         await pair.pair(api_factory, shutdown)
 
@@ -80,9 +81,11 @@ async def run(args):
 
     if args.command == "hsb":
         device = await devices.get_device(api, gateway, args.ID)
-        await device.set_hsb(int(args.hue)*65535/360,
-                             int(args.saturation)*65279/100,
-                             args.brightness)
+        await device.set_hsb(
+            int(args.hue) * 65535 / 360,
+            int(args.saturation) * 65279 / 100,
+            args.brightness,
+        )
 
     if args.command == "rgb":
         device = await devices.get_device(api, gateway, args.ID)
@@ -90,10 +93,11 @@ async def run(args):
 
     if args.command == "test":
         device = await devices.get_device(api, gateway, 65551)
-        print (device.hex)
+        print(device.hex)
 
     if args.command == "color":
         from ikeatradfri.colors import hex_colors
+
         if args.color_command == "list":
             for key, a in hex_colors.items():
                 print("{0}: {1}".format(key, a["Name"]))
@@ -107,23 +111,20 @@ async def run(args):
 
 def exception_handler(loop, context):
     print("Caught the following exception")
-    print(context['message'])
+    print(context["message"])
     # print(context['exception'])
 
 
 if __name__ == "__main__":
-    
+
     args = cli.getArgs()
 
     if args.debug:
-        logging.basicConfig(format='%(levelname)s:%(message)s',
-                            level=logging.DEBUG)
+        logging.basicConfig(format="%(levelname)s:%(message)s", level=logging.DEBUG)
     elif args.verbose:
-        logging.basicConfig(format='%(levelname)s:%(message)s',
-                            level=logging.INFO)
+        logging.basicConfig(format="%(levelname)s:%(message)s", level=logging.INFO)
     else:
-        logging.basicConfig(format='%(levelname)s:%(message)s',
-                            level=logging.CRITICAL)
+        logging.basicConfig(format="%(levelname)s:%(message)s", level=logging.CRITICAL)
 
     loop = asyncio.get_event_loop()
     if args.verbose is None and args.debug is None:
@@ -133,6 +134,7 @@ if __name__ == "__main__":
     try:
         if args.command == "service":
             from ikeatradfri import service
+
             if args.service_command == "create":
                 service.create_service_file(args.user, args.group)
                 exit()
@@ -142,24 +144,37 @@ if __name__ == "__main__":
         if args.command == "server":
             from ikeatradfri import tcp_server
             from ikeatradfri import http_server
-            
+
             loop = asyncio.get_event_loop()
             loop.create_task(signal_handler.handle_signals(loop))
 
             if (not args.tcp) and args.http:
-                loop.create_task(http_server.start(host=args.server_host, port=args.http_port))              
+                loop.create_task(
+                    http_server.start(host=args.server_host, port=args.http_port)
+                )
             elif args.tcp and (not args.http):
                 # tcp_server.tcp_server().start_tcp_server()
-                loop.create_task(tcp_server.tcp_server().main(host=args.server_host, port=args.tcp_port))
+                loop.create_task(
+                    tcp_server.tcp_server().main(
+                        host=args.server_host, port=args.tcp_port
+                    )
+                )
             else:
-                loop.create_task(http_server.start(host=args.server_host, port=args.http_port))
-                loop.create_task(tcp_server.tcp_server().main(host=args.server_host, port=args.tcp_port))
+                loop.create_task(
+                    http_server.start(host=args.server_host, port=args.http_port)
+                )
+                loop.create_task(
+                    tcp_server.tcp_server().main(
+                        host=args.server_host, port=args.tcp_port
+                    )
+                )
                 # tcp_server.tcp_server().start_tcp_server()
 
             loop.run_forever()
 
         elif args.command == "observe":
             from ikeatradfri import observe
+
             loop.create_task(signal_handler.handle_signals(loop))
             loop.create_task(observe.observe())
             loop.run_forever()

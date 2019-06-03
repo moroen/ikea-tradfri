@@ -18,17 +18,17 @@ async def start(host=None, port=None):
     app = web.Application()
     try:
         app["api"], app["gateway"], APP_FACTORY = await config.connectToGateway()
-    
+
         app.add_routes(routes)
 
         runner = web.AppRunner(app)
         await runner.setup()
-        
+
         if host is None:
             host = HOST
         if port is None:
             port = PORT
-        
+
         site = web.TCPSite(runner, host, port)
 
         logging.info("Starting IKEA-Tradfri HTTP server on {0}:{1}".format(host, port))
@@ -36,7 +36,3 @@ async def start(host=None, port=None):
 
     except exceptions.ConfigNotFound:
         await signal_handler.shutdown("ERROR")
-        
-
-    
-
