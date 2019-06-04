@@ -64,7 +64,7 @@ class tcp_server:
                         result="Unknown command",
                     )
 
-                logging.info("Sending: {0}".format(returnData.json))
+                logging.debug("Sending: {0}".format(returnData.json))
                 writer.write(returnData.json)
                 await writer.drain()
 
