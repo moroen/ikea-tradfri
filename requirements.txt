@@ -1,0 +1,15 @@
+aiocoap==0.4a1
+aiohttp==4.0.0a0
+appdirs==1.4.3
+async-timeout==3.0.1
+attrs==19.1.0
+black==19.3b0
+chardet==3.0.4
+Click==7.0
+Cython==0.29.7
+DTLSSocket==0.1.9
+idna==2.8
+multidict==4.5.2
+pytradfri==6.0.1
+toml==0.10.0
+yarl==1.3.0

@@ -1,0 +1,10 @@
+.direnv
+.eggs
+.pytest_cache
+.vs
+.vscode
+build
+dist
+ikeatradfri.egg-info
+.envrc
+MANIFEST.in
