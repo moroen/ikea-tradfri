@@ -2,11 +2,11 @@
 
 
 ## Requirements
-Recommended python version: 3.6.x - 3.7.x
+Recommended python version: 3.6.x - 3.7.x, 3.5.3 also supported, but will be deprecated.
 
 ## Install dependencies
 ```shell
-$ sudo apt install autoconf
+$ sudo apt install build-essential autoconf 
 ```
 
 ## Setup
