@@ -15,7 +15,6 @@ $ python3 setup.py install
 ```
 
 ## Configure connection
-
 ```shell
 ./tradfri config <IP> <KEY>
 ```
@@ -37,4 +36,23 @@ $ python3 setup.py install
 ./tradfri off <ID>
 ./tradfri level <ID> <LEVEL> (Level: 0-254)
 ./tradfri wb <ID> <WHITEBALANCE> (Whitebalance: cold/normal/warm)
+```
+
+## Using docker
+
+### Build docker image
+```shell
+$ docker build --no-cache --build-arg ip=IP --build-arg key=KEY -t tradfri:latest . 
+```
+IP = the ip-adress of the IKEA gateway, KEY = the master key found on the underside of the gateway.
+
+### Run docker image
+```shell
+$ docker run -d -p 1234:1234 -p 8085:8085 tradfri:latest
+```
+
+### Test docker-adapter
+Test the adapter using curl (or another browser)
+```shell
+$ curl docker-host-ip:8085/devices
 ```
