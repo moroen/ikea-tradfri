@@ -2,13 +2,11 @@
 
 
 ## Requirements
-Recommended python version: 3.5.3 - 3.7.3
+Recommended python version: 3.6.x - 3.7.x
 
-## Pre install
-Latest version of PIP and setuptools are needed:
+## Install dependencies
 ```shell
-$ pip install --upgrade pip
-$ pip install --upgrade setuptools
+$ sudo apt install autoconf
 ```
 
 ## Setup

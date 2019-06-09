@@ -8,10 +8,11 @@ from .exceptions import UnsupportedDeviceCommand
 
 class ikea_device(object):
     _device = None
+    _api = None
 
     def __init__(self, device, api):
         self._device = device
-        self.api = api
+        self._api = api
         # self.deviceID = device.id
         # self.deviceName = device.name
         # self.modelNumber = device.device_info.model_number
@@ -112,16 +113,16 @@ class ikea_device(object):
     # Functions
     async def set_state(self, state):
         if self._device.has_light_control:
-            await self.api(self._device.light_control.set_state(state))
+            await self._api(self._device.light_control.set_state(state))
         elif self._device.has_socket_control:
-            await self.api(self._device.socket_control.set_state(state))
+            await self._api(self._device.socket_control.set_state(state))
         else:
             raise UnsupportedDeviceCommand
         await self.refresh()
 
     async def set_level(self, level, transition_time=10):
         if self.dimmable:
-            await self.api(
+            await self._api(
                 self._device.light_control.set_dimmer(
                     int(level), transition_time=transition_time
                 )
@@ -132,7 +133,7 @@ class ikea_device(object):
 
     async def set_hex(self, hex, transition_time=10):
         if self.has_hex:
-            await self.api(
+            await self._api(
                 self._device.light_control.set_hex_color(
                     hex, transition_time=transition_time
                 )
@@ -146,7 +147,7 @@ class ikea_device(object):
         if brightness is not None:
             brightness = int(brightness)
 
-        await self.api(
+        await self._api(
             self._device.light_control.set_hsb(
                 int(hue), int(saturation), brightness, transition_time=transition_time
             )
@@ -161,9 +162,12 @@ class ikea_device(object):
             b * const.RANGE_BRIGHTNESS[1],
         )
 
+    async def set_name(self, name):
+        await self._api(self._device.set_name(name))
+
     async def refresh(self):
         gateway = Gateway()
-        self.__init__(await self.api(gateway.get_device(int(self.id))), self.api)
+        self.__init__(await self._api(gateway.get_device(int(self.id))), self._api)
 
 
 class ikea_group(object):
@@ -226,6 +230,9 @@ class ikea_group(object):
             dev = await get_device(self._api, Gateway(), aID)
             if dev.device_has_hex:
                 await dev.set_hex(hex, transition_time=transition_time)
+
+    async def set_name(self, name):
+        await self._api(self._group.set_name(name))
 
     async def refresh(self):
         for aMember in self._members:

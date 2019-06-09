@@ -42,6 +42,10 @@ async def run(args):
             device = await devices.get_device(api, gateway, args.ID)
             await device.set_state(False)
 
+        if args.command == "name":
+            device = await devices.get_device(api, gateway, args.ID)
+            await device.set_name(args.NAME)
+
         if args.command == "level":
             device = await devices.get_device(api, gateway, args.ID)
             await device.set_level(args.value, transition_time=args.transition_time)

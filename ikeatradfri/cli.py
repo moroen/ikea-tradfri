@@ -36,6 +36,10 @@ def getArgs():
     subparsers.add_parser("on").add_argument("ID")
     subparsers.add_parser("off").add_argument("ID")
 
+    name_parser = subparsers.add_parser("name")
+    name_parser.add_argument("ID")
+    name_parser.add_argument("NAME")
+
     server_parser = subparsers.add_parser("server")
     server_parser.add_argument("--tcp", action="store_true")
     server_parser.add_argument("--http", action="store_true")
