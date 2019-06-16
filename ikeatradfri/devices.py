@@ -2,6 +2,7 @@ from pytradfri import Gateway, const, error
 import json
 import colorsys
 import logging
+from  asyncio import sleep
 
 from .exceptions import UnsupportedDeviceCommand
 
@@ -118,6 +119,8 @@ class ikea_device(object):
             await self._api(self._device.socket_control.set_state(state))
         else:
             raise UnsupportedDeviceCommand
+        
+        await sleep(1)
         await self.refresh()
 
     async def set_level(self, level, transition_time=10):
@@ -129,6 +132,8 @@ class ikea_device(object):
             )
         else:
             raise UnsupportedDeviceCommand
+
+        await sleep(1)
         await self.refresh()
 
     async def set_hex(self, hex, transition_time=10):
@@ -167,7 +172,9 @@ class ikea_device(object):
 
     async def refresh(self):
         gateway = Gateway()
-        self.__init__(await self._api(gateway.get_device(int(self.id))), self._api)
+        logging.info("Calling refresh for device id: {0}".format(self.id))
+        self._device = await self._api(gateway.get_device(int(self.id)))
+
 
 
 class ikea_group(object):
@@ -219,10 +226,17 @@ class ikea_group(object):
 
     async def set_state(self, state):
         await self._api(self._group.set_state(state))
+        await sleep(1)
         await self.refresh()
 
     async def set_level(self, level, transition_time=10):
+        if level > 0:
+            await self._api(self._group.set_state(True))
+        else:
+            await self._api(self._group.set_state(False))
+
         await self._api(self._group.set_dimmer(level, transition_time))
+        await sleep(1)
         await self.refresh()
 
     async def set_hex(self, hex, transition_time=10):
@@ -235,6 +249,10 @@ class ikea_group(object):
         await self._api(self._group.set_name(name))
 
     async def refresh(self):
+        gateway = Gateway()
+        logging.info("Refreshing group with id: {}".format(self._group.id))
+        self._group = await self._api(gateway.get_group(int(self._group.id)))
+
         for aMember in self._members:
             await aMember.refresh()
 
