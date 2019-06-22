@@ -35,7 +35,7 @@ class tcp_server:
                 message = data.decode("utf-8")
                 addr = writer.get_extra_info("peername")
 
-                logging.debug("Received {} from {}".format(message, addr))
+                logging.info("Received {} from {}".format(message, addr))
 
                 command = json.loads(message)
 
@@ -64,7 +64,7 @@ class tcp_server:
                         result="Unknown command",
                     )
 
-                logging.debug("Sending: {0}".format(returnData.json))
+                logging.info("Sending: {0}".format(returnData.json))
                 writer.write(returnData.json)
                 await writer.drain()
 
@@ -148,7 +148,6 @@ class tcp_server:
             target_state = False
 
         await device.set_state(target_state)
-        await device.refresh()
 
         devices = []
         description = device.description
@@ -162,7 +161,6 @@ class tcp_server:
         device = await Devices.get_device(self._api, self._gateway, command["deviceID"])
 
         await device.set_level(command["level"], transition_time=self._transition_time)
-        await device.refresh()
 
         devices = []
 
