@@ -25,7 +25,6 @@ def hexToRgb(hex):
 
 
 async def run(args):
-    hostConfig = await config.getConfig(args)
 
     api_factory = APIFactory(
         hostConfig["Gateway"], hostConfig["Identity"], hostConfig["Passkey"]
@@ -135,6 +134,19 @@ if __name__ == "__main__":
         loop.set_exception_handler(exception_handler)
     # loop.set_debug(True)
 
+    if args.command == "config":
+        config.handle_config_command(args)
+        exit()
+
+    try:
+        hostConfig = config.get_config(args)
+    except exceptions.ConfigNotFound:
+        logging.critical("No config file found!")
+        exit()
+    except exceptions.NoGatewaySpecified:
+        logging.critical("No gateway specified!")
+        exit()
+
     try:
         if args.command == "service":
             from ikeatradfri import service
@@ -152,28 +164,18 @@ if __name__ == "__main__":
             loop = asyncio.get_event_loop()
             loop.create_task(signal_handler.handle_signals(loop))
 
-            if (not args.tcp) and args.http:
-                loop.create_task(
-                    http_server.start(host=args.server_host, port=args.http_port)
+            server = {
+                "Tcp": lambda: loop.create_task(
+                    tcp_server.tcp_server().main(hostConfig)
+                ),
+                "Http": lambda: loop.create_task(http_server.start(hostConfig)),
+                "Both": lambda: loop.create_task(
+                    tcp_server.tcp_server().main(hostConfig)
                 )
-            elif args.tcp and (not args.http):
-                # tcp_server.tcp_server().start_tcp_server()
-                loop.create_task(
-                    tcp_server.tcp_server().main(
-                        host=args.server_host, port=args.tcp_port
-                    )
-                )
-            else:
-                loop.create_task(
-                    http_server.start(host=args.server_host, port=args.http_port)
-                )
-                loop.create_task(
-                    tcp_server.tcp_server().main(
-                        host=args.server_host, port=args.tcp_port
-                    )
-                )
-                # tcp_server.tcp_server().start_tcp_server()
+                and loop.create_task(http_server.start(hostConfig)),
+            }
 
+            server.get(hostConfig["Server_type"], lambda: "nothing")()
             loop.run_forever()
 
         elif args.command == "observe":

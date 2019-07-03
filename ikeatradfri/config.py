@@ -1,20 +1,124 @@
 import os
 import uuid
 import json
+import asyncio
 
-from pytradfri import Gateway
-from pytradfri.api.aiocoap_api import APIFactory
 import logging
 import appdirs
 
-from .exceptions import ConfigNotFound
+from pytradfri import Gateway
+from pytradfri.api.aiocoap_api import APIFactory
+from pytradfri import error as pyerror
 
-_API = None
-_GATEWAY = None
-_API_FACTORY = None
+from .exceptions import ConfigNotFound, NoGatewaySpecified
+
+CONFIGFILE = "{0}/gateway.json".format(appdirs.user_config_dir(appname="tradfri"))
 
 
-async def getConfig(args=None):
+class host_config(object):
+    _confObj = {}
+
+    def __init__(self):
+        self._confObj.update(
+            Server_type="Both",
+            Gateway=None,
+            Server_ip="127.0.0.1",
+            Tcp_port=1234,
+            Http_port=8085,
+            Identity=None,
+            Passkey=None,
+            Verbosity=0,
+        )
+        self.load()
+
+    def load(self):
+        if os.path.isfile(CONFIGFILE):
+            with open(CONFIGFILE) as json_data_file:
+                loaded_conf = json.load(json_data_file)
+                for key, value in loaded_conf.items():
+                    self._confObj[key] = value
+        else:
+            self.save()
+
+    def save(self):
+        CONFDIR = appdirs.user_config_dir(appname="tradfri")
+        if not os.path.exists(CONFDIR):
+            os.makedirs(CONFDIR)
+
+        with open(CONFIGFILE, "w") as outfile:
+            json.dump(self._confObj, outfile)
+
+        logging.info("Config created")
+
+    def set_config_items(self, **kwargs):
+        for key, value in kwargs.items():
+            self._confObj[key] = value
+
+    def set_config_item(self, key, value):
+        try:
+            self._confObj[key.capitalize().replace("-", "_")] = value.capitalize()
+        except AttributeError:
+            self._confObj[key.capitalize().replace("-", "_")] = value
+
+    @property
+    def configuation(self):
+        return self._confObj
+
+    @property
+    def gateway(self):
+        return self._confObj["Gateway"]
+
+
+async def create_psk(args):
+    hostConfig = host_config()
+
+    identity = uuid.uuid4().hex
+    api_factory = APIFactory(host=args.IP, psk_id=identity)
+
+    psk = await api_factory.generate_psk(args.KEY)
+    hostConfig.set_config_items(Gateway=args.IP, Identity=identity, Passkey=psk)
+
+    hostConfig.save()
+
+    print("Config created!")
+    return
+
+
+def handle_config_command(args):
+    print(args)
+
+    conf = host_config()
+    conf.load()
+
+    if args.config == None:
+        try:
+            print(json.dumps(conf.configuation, indent=4, sort_keys=True))
+            exit()
+        except ConfigNotFound:
+            logging.critical("Config file not found!")
+
+    if args.config == "gateway":
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(create_psk(args))
+    else:
+        conf.set_config_item(args.config, args.value)
+
+    conf.save()
+
+
+def get_config(args):
+    confObj = host_config()
+
+    if confObj.gateway is None:
+        raise NoGatewaySpecified
+
+    if args.verbose is not None:
+        confObj.set_config_item("Verbosity", args.verbose)
+
+    return confObj.configuation
+
+
+async def old_getConfig(args=None):
     hostConfig = {}
     showConfig = False
 
@@ -54,22 +158,3 @@ async def getConfig(args=None):
     else:
         logging.error("Config-file not found")
         raise ConfigNotFound
-
-
-async def connectToGateway(storeConfig=False):
-    global _API, _API_FACTORY, _GATEWAY
-
-    hostConfig = await getConfig()
-
-    api_factory = APIFactory(
-        hostConfig["Gateway"], hostConfig["Identity"], hostConfig["Passkey"]
-    )
-    api = api_factory.request
-    gateway = Gateway()
-
-    if storeConfig:
-        _API = api
-        _API_FACTORY = api_factory
-        _GATEWAY = gateway
-
-    return api, gateway, api_factory

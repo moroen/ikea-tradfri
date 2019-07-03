@@ -5,12 +5,15 @@ import signal
 
 
 from . import config, devices as Devices, exceptions, signal_handler
-from .server_commands import return_object
+from .server_commands import return_object, connect_to_gateway
 
 from pytradfri import error as Error
 
 HOST = "127.0.0.1"
 PORT = 1234
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 class tcp_server:
@@ -23,10 +26,10 @@ class tcp_server:
     _transition_time = 10
 
     def __init__(self):
-        pass
+        self._hostConfig = None
 
     async def handle_echo(self, reader, writer):
-        logging.info("Connected from {}".format(writer.get_extra_info("peername")))
+        logger.info("Connected from {}".format(writer.get_extra_info("peername")))
         while True:
 
             data = await reader.readline()
@@ -35,7 +38,8 @@ class tcp_server:
                 message = data.decode("utf-8")
                 addr = writer.get_extra_info("peername")
 
-                logging.info("Received {} from {}".format(message, addr))
+                if self._hostConfig["Verbosity"] > 0:
+                    logger.info("Received {} from {}".format(message, addr))
 
                 command = json.loads(message)
 
@@ -64,19 +68,21 @@ class tcp_server:
                         result="Unknown command",
                     )
 
-                logging.info("Sending: {0}".format(returnData.json))
+                if self._hostConfig["Verbosity"] > 0:
+                    logger.info("Sending: {0}".format(returnData.json))
+
                 writer.write(returnData.json)
                 await writer.drain()
 
             else:
-                logging.info("Closing connection")
+                logger.info("Closing connection")
                 writer.close()
                 return
 
     async def init_gateway(self, command):
         try:
-            self._api, self._gateway, self._api_factory = (
-                await config.connectToGateway()
+            self._api, self._gateway, self._api_factory = await connect_to_gateway(
+                self._hostConfig
             )
             return return_object("initGateway", status="Ok")
         except exceptions.ConfigNotFound:
@@ -181,23 +187,16 @@ class tcp_server:
         devices.append(device.description)
         return return_object(action="setHex", status="Ok", result=devices)
 
-    async def main(self, host=None, port=PORT):
-        loop = asyncio.get_event_loop()
+    async def main(self, hostConfig):
+        # loop = asyncio.get_event_loop()
+        self._hostConfig = hostConfig
 
-        try:
-            await config.getConfig()
-        except exceptions.ConfigNotFound:
-            await signal_handler.shutdown("ERROR")
-
-        if host is None:
-            host = HOST
-        if port is None:
-            port = PORT
-
-        self._server = await asyncio.start_server(self.handle_echo, host, port)
+        self._server = await asyncio.start_server(
+            self.handle_echo, hostConfig["Server_ip"], hostConfig["Tcp_port"]
+        )
 
         addr = self._server.sockets[0].getsockname()
-        logging.info(
+        logger.info(
             "Starting IKEA-Tradfri TCP server on {0}:{1}".format(addr[0], addr[1])
         )
 

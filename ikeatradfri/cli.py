@@ -16,14 +16,24 @@ def getArgs():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--debug", action="store_true")
-    parser.add_argument("--verbose", action="store_true")
+    parser.add_argument("-v", "--verbose", action="count")
 
     subparsers = parser.add_subparsers(dest="command")
     subparsers.required = True
 
     parser_config = subparsers.add_parser("config")
-    parser_config.add_argument("IP")
-    parser_config.add_argument("KEY")
+    parser_config_subparsers = parser_config.add_subparsers(dest="config")
+
+    parser_config_gateway = parser_config_subparsers.add_parser("gateway")
+    parser_config_gateway.add_argument("IP")
+    parser_config_gateway.add_argument("KEY")
+
+    parser_config_subparsers.add_parser("server-type").add_argument(
+        "value", choices=["tcp", "http", "both"]
+    )
+    parser_config_subparsers.add_parser("server-ip").add_argument("value")
+    parser_config_subparsers.add_parser("tcp-port").add_argument("value")
+    parser_config_subparsers.add_parser("http-port").add_argument("value")
 
     parser_service = subparsers.add_parser("service").add_subparsers(
         dest="service_command"
@@ -94,4 +104,5 @@ def getArgs():
     parser_set_color.add_argument("ID")
     parser_set_color.add_argument("color")
 
-    return parser.parse_args()
+    args = parser.parse_args()
+    return args

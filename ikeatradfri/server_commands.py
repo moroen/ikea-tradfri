@@ -6,6 +6,11 @@ except ImportError:
     import devices as Devices
 
 
+from pytradfri import Gateway
+from pytradfri.api.aiocoap_api import APIFactory
+from pytradfri import error as pyerror
+
+
 class return_object:
     def __init__(self, action=None, status="Error", result=None):
         self._action = action
@@ -22,6 +27,17 @@ class return_object:
             return json.dumps({"action": self._action, "status": self._status}).encode(
                 "utf-8"
             )
+
+
+async def connect_to_gateway(hostConfig):
+
+    api_factory = APIFactory(
+        hostConfig["Gateway"], hostConfig["Identity"], hostConfig["Passkey"]
+    )
+    api = api_factory.request
+    gateway = Gateway()
+
+    return api, gateway, api_factory
 
 
 async def serverCommand(request):

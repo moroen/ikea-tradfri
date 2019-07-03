@@ -2,7 +2,7 @@ from pytradfri import Gateway, const, error
 import json
 import colorsys
 import logging
-from  asyncio import sleep
+from asyncio import sleep
 
 from .exceptions import UnsupportedDeviceCommand
 
@@ -119,7 +119,7 @@ class ikea_device(object):
             await self._api(self._device.socket_control.set_state(state))
         else:
             raise UnsupportedDeviceCommand
-        
+
         await sleep(1)
         await self.refresh()
 
@@ -174,7 +174,6 @@ class ikea_device(object):
         gateway = Gateway()
         logging.info("Calling refresh for device id: {0}".format(self.id))
         self._device = await self._api(gateway.get_device(int(self.id)))
-
 
 
 class ikea_group(object):
