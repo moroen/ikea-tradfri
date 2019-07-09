@@ -22,15 +22,23 @@ class tcp_server:
     _api_factory = None
 
     _server = None
-
     _transition_time = 10
 
     def __init__(self):
         self._hostConfig = None
 
+    async def close_connection(self, writer):
+        logger.info("Closing connection from {}".format(writer.get_extra_info("peername")))
+        writer.close()
+        await writer.wait_closed()
+        logger.info("Connection closed")
+        return
+
     async def handle_echo(self, reader, writer):
+    
+        keep_connection = True
         logger.info("Connected from {}".format(writer.get_extra_info("peername")))
-        while True:
+        while keep_connection:  
 
             data = await reader.readline()
             if data:
@@ -42,41 +50,47 @@ class tcp_server:
                     logger.info("Received {} from {}".format(message, addr))
 
                 command = json.loads(message)
+                try:
+                    if command["action"] == "initGateway":
+                        returnData = await self.init_gateway(command)
 
-                if command["action"] == "initGateway":
-                    returnData = await self.init_gateway(command)
+                    elif command["action"] == "getDevices":
+                        returnData = await self.send_devices_list(command)
 
-                elif command["action"] == "getDevices":
-                    returnData = await self.send_devices_list(command)
+                    elif command["action"] == "setState":
+                        returnData = await self.set_state(command)
 
-                elif command["action"] == "setState":
-                    returnData = await self.set_state(command)
+                    elif command["action"] == "setLevel":
+                        returnData = await self.set_level(command)
 
-                elif command["action"] == "setLevel":
-                    returnData = await self.set_level(command)
+                    elif command["action"] == "setHex":
+                        returnData = await self.set_hex(command)
 
-                elif command["action"] == "setHex":
-                    returnData = await self.set_hex(command)
-
-                elif command["action"] == "getChanges":
-                    returnData = await self.send_changes(command)
-
-                else:
-                    returnData = return_object(
-                        action=command["action"],
-                        status="Error",
-                        result="Unknown command",
-                    )
+                    elif command["action"] == "getChanges":
+                        returnData = await self.send_changes(command)
+            
+                    else:
+                        returnData = return_object(
+                            action=command["action"],
+                            status="Error",
+                            result="Unknown command",
+                        )
+                except OSError:
+                    print("Fuck")
 
                 if self._hostConfig["Verbosity"] > 0:
                     logger.info("Sending: {0}".format(returnData.json))
+
+                if returnData.status == "Error":
+                    logger.info("Error received")
+                    await self.close_connection(writer)
+                    return
 
                 writer.write(returnData.json)
                 await writer.drain()
 
             else:
-                logger.info("Closing connection")
-                writer.close()
+                await self.close_connection(writer)
                 return
 
     async def init_gateway(self, command):
@@ -145,47 +159,57 @@ class tcp_server:
             return return_object("getDevices", status="Error", result="Server error")
 
     async def set_state(self, command):
-        device = await Devices.get_device(self._api, self._gateway, command["deviceID"])
-        target_state = None
+        try:
+            device = await Devices.get_device(self._api, self._gateway, command["deviceID"])
+            target_state = None
 
-        if command["state"] == "On":
-            target_state = True
-        elif command["state"] == "Off":
-            target_state = False
+            if command["state"] == "On":
+                target_state = True
+            elif command["state"] == "Off":
+                target_state = False
 
-        await device.set_state(target_state)
+            await device.set_state(target_state)
 
-        devices = []
-        description = device.description
-        if description["Type"] == "Group":
-            description["State"] = target_state
+            devices = []
+            description = device.description
+            if description["Type"] == "Group":
+                description["State"] = target_state
 
-        devices.append(description)
-        return return_object(action="setState", status="Ok", result=devices)
+            devices.append(description)
+            return return_object(action="setState", status="Ok", result=devices)
+        
+        except Error.ServerError:
+            return return_object("set_state", status="Error", result="Server error")
 
     async def set_level(self, command):
-        device = await Devices.get_device(self._api, self._gateway, command["deviceID"])
+        try:
+            device = await Devices.get_device(self._api, self._gateway, command["deviceID"])
 
-        await device.set_level(command["level"], transition_time=self._transition_time)
+            await device.set_level(command["level"], transition_time=self._transition_time)
 
-        devices = []
+            devices = []
 
-        description = device.description
-        if description["Type"] == "Group":
-            # Groups return set level.
-            description["Level"] = command["level"]
+            description = device.description
+            if description["Type"] == "Group":
+                # Groups return set level.
+                description["Level"] = command["level"]
 
-        devices.append(description)
-        return return_object(action="setLevel", status="Ok", result=devices)
+            devices.append(description)
+            return return_object(action="setLevel", status="Ok", result=devices)
+        except Error.ServerError:
+            return return_object("set_level", status="Error", result="Server error")
 
     async def set_hex(self, command):
-        device = await Devices.get_device(self._api, self._gateway, command["deviceID"])
-        await device.set_hex(command["hex"], transition_time=self._transition_time)
-        await device.refresh()
+        try:
+            device = await Devices.get_device(self._api, self._gateway, command["deviceID"])
+            await device.set_hex(command["hex"], transition_time=self._transition_time)
+            await device.refresh()
 
-        devices = []
-        devices.append(device.description)
-        return return_object(action="setHex", status="Ok", result=devices)
+            devices = []
+            devices.append(device.description)
+            return return_object(action="setHex", status="Ok", result=devices)
+        except Error.ServerError:
+            return return_object("set_hex", status="Error", result="Server error")
 
     async def main(self, hostConfig):
         # loop = asyncio.get_event_loop()
