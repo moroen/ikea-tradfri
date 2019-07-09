@@ -27,6 +27,7 @@ class host_config(object):
             Http_port=8085,
             Identity=None,
             Passkey=None,
+            Transition_time = 10, 
             Verbosity=0,
         )
         self.load()
@@ -85,8 +86,6 @@ async def create_psk(args):
 
 
 def handle_config_command(args):
-    print(args)
-
     conf = host_config()
     conf.load()
 
@@ -108,12 +107,25 @@ def handle_config_command(args):
 
 def get_config(args):
     confObj = host_config()
-
+    
     if confObj.gateway is None:
         raise NoGatewaySpecified
 
-    if args.verbose is not None:
-        confObj.set_config_item("Verbosity", args.verbose)
+    if args.command == "server":
+        if args.verbose is not None:
+            confObj.set_config_item("Verbosity", args.verbose)
+
+        if args.server_host is not None:
+            confObj.set_config_item("Server_ip", args.server_host)
+
+        if args.tcp_port is not None:
+            confObj.set_config_item("Tcp_port", args.tcp_port)
+
+        if args.http_port is not None:
+            confObj.set_config_item("Http_port", args.http_port)
+
+        if args.server_type is not None:
+            confObj.set_config_item("Server_type", args.server_type)
 
     return confObj.configuation
 

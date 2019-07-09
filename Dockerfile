@@ -11,7 +11,8 @@ RUN apk add --no-cache python3 python3-dev gcc musl-dev git autoconf;\
     pip3 install --upgrade setuptools;\
     pip3 install -r requirements.txt;\
     python3 setup.py install;\
-    tradfri config $ip $key;\
+    tradfri config gateway $ip $key;\
+    tradfri config server-ip 0.0.0.0;\
     apk del autoconf git musl-dev gcc
 
 RUN rm -rf /root/*

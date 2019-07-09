@@ -34,6 +34,7 @@ def getArgs():
     parser_config_subparsers.add_parser("server-ip").add_argument("value")
     parser_config_subparsers.add_parser("tcp-port").add_argument("value")
     parser_config_subparsers.add_parser("http-port").add_argument("value")
+    parser_config_subparsers.add_parser("transition-time").add_argument("value")
 
     parser_service = subparsers.add_parser("service").add_subparsers(
         dest="service_command"
@@ -52,7 +53,7 @@ def getArgs():
 
     server_parser = subparsers.add_parser("server")
     server_parser.add_argument("--tcp", action="store_true")
-    server_parser.add_argument("--http", action="store_true")
+    server_parser.add_argument("--server-type", choices=["tcp", "http", "both"])
     server_parser.add_argument("--host", dest="server_host")
     server_parser.add_argument("--http-port", dest="http_port")
     server_parser.add_argument("--tcp-port", dest="tcp_port")
