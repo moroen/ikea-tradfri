@@ -213,11 +213,19 @@ class ikea_group(object):
 
     @property
     def colorspace(self):
-        return "W"
+        def_colspace="W"
+        for aDevice in self._members:
+            if aDevice.colorspace == "CWS":
+                return "CWS"
+            elif aDevice.colorspace == "WS":
+                def_colspace="WS"
+
+        return def_colspace
 
     @property
     def hex(self):
-        return None
+        print(self._group)
+        return self._group.hex_color
 
     @property
     def raw(self):
@@ -239,10 +247,8 @@ class ikea_group(object):
         await self.refresh()
 
     async def set_hex(self, hex, transition_time=10):
-        for aID in self._group.member_ids:
-            dev = await get_device(self._api, Gateway(), aID)
-            if dev.device_has_hex:
-                await dev.set_hex(hex, transition_time=transition_time)
+        print("thoho")
+        await self._api(self._group.set_hex_color(hex, transition_time))
 
     async def set_name(self, name):
         await self._api(self._group.set_name(name))

@@ -36,11 +36,12 @@ async def list_devices(api, gateway, expand_groups=False):
     for aGroup in groups:
         descript = aGroup.description
         print(
-            "{0}: {1} - {2}:{3}".format(
+            "{0}: {1} - {2}:{3} - {4}".format(
                 descript["DeviceID"],
                 descript["Name"],
                 descript["State"],
                 descript["Level"],
+                descript["Hex"]
             )
         )
         if expand_groups:

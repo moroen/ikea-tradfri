@@ -58,6 +58,10 @@ async def run(args):
                     await device.set_hex(a["Hex"], args.transition_time)
                     break
 
+        if args.command == "hex":
+            device = await devices.get_device(api, gateway, args.ID)
+            await device.set_hex(args.value.lower(), args.transition_time)
+
     except devices.UnsupportedDeviceCommand:
         logging.error(
             "Unsupported command '{0}' for device {1}".format(args.command, args.ID)

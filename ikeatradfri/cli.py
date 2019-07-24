@@ -81,12 +81,15 @@ def getArgs():
     parser_hex = subparsers.add_parser("hex")
     parser_hex.add_argument("ID")
     parser_hex.add_argument("value")
+    parser_hex.add_argument(
+        "--transition-time", nargs="?", default=10, type=int, dest="transition_time"
+    )
 
     parser_hsb = subparsers.add_parser("hsb")
     parser_hsb.add_argument("ID")
     parser_hsb.add_argument("hue")
     parser_hsb.add_argument("saturation")
-    parser_hex.add_argument("brightness", nargs="?")
+    parser_hsb.add_argument("brightness", nargs="?")
 
     parser_rgb = subparsers.add_parser("rgb")
     parser_rgb.add_argument("ID")

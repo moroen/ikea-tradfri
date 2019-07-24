@@ -46,7 +46,7 @@ class tcp_server:
                 message = data.decode("utf-8")
                 addr = writer.get_extra_info("peername")
 
-                if self._hostConfig["Verbosity"] > 0:
+                if self._hostConfig["Verbosity"] > 1:
                     logger.info("Received {} from {}".format(message, addr))
 
                 command = json.loads(message)
@@ -78,7 +78,7 @@ class tcp_server:
                 except OSError:
                     print("Fuck")
 
-                if self._hostConfig["Verbosity"] > 0:
+                if self._hostConfig["Verbosity"] > 1:
                     logger.info("Sending: {0}".format(returnData.json))
 
                 if returnData.status == "Error":
