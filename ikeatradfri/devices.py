@@ -138,6 +138,7 @@ class ikea_device(object):
 
     async def set_hex(self, hex, transition_time=10):
         if self.has_hex:
+            
             await self._api(
                 self._device.light_control.set_hex_color(
                     hex, transition_time=transition_time
@@ -224,8 +225,14 @@ class ikea_group(object):
 
     @property
     def hex(self):
-        print(self._group)
-        return self._group.hex_color
+        hex = None
+        for aDevice in self._members:
+            if aDevice.colorspace == "CWS":
+                return aDevice.hex
+            elif aDevice.colorspace == "WS":
+                hex = aDevice.hex
+
+        return hex
 
     @property
     def raw(self):
@@ -247,8 +254,9 @@ class ikea_group(object):
         await self.refresh()
 
     async def set_hex(self, hex, transition_time=10):
-        print("thoho")
         await self._api(self._group.set_hex_color(hex, transition_time))
+        await sleep(1)
+        await self.refresh()
 
     async def set_name(self, name):
         await self._api(self._group.set_name(name))
