@@ -1,5 +1,8 @@
 import argparse, sys
+from . import __version__
 
+def get_version():
+    return __version__
 
 def check_level(value):
     try:
@@ -17,9 +20,12 @@ def getArgs():
 
     parser.add_argument("--debug", action="store_true")
     parser.add_argument("-v", "--verbose", action="count")
+    parser.add_argument("--version", action="store_true")
 
     subparsers = parser.add_subparsers(dest="command")
-    subparsers.required = True
+    subparsers.required = False
+
+
 
     parser_config = subparsers.add_parser("config")
     parser_config_subparsers = parser_config.add_subparsers(dest="config")
@@ -109,4 +115,4 @@ def getArgs():
     parser_set_color.add_argument("color")
 
     args = parser.parse_args()
-    return args
+    return args, parser

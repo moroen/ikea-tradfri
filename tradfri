@@ -124,7 +124,11 @@ def exception_handler(loop, context):
 
 if __name__ == "__main__":
 
-    args = cli.getArgs()
+    args, parser = cli.getArgs()
+
+    if args.version:
+        print("{} version {}".format(parser.prog, cli.get_version()))
+        exit()
 
     if args.debug:
         logging.basicConfig(format="%(levelname)s:%(message)s", level=logging.DEBUG)
