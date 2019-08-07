@@ -59,59 +59,70 @@ async def run(args):
                     break
 
         if args.command == "hex":
-            device = await devices.get_device(api, gateway, args.ID)
-            await device.set_hex(args.value.lower(), args.transition_time)
+            from ikeatradfri import colors
 
+            device = await devices.get_device(api, gateway, args.ID)
+            if args.value == "show":
+                print ("Current hex: {} ({}) in colorspace: {}".format(device.hex, colors.color_name_for_hex(device.hex, device.colorspace), device.colorspace))
+                if args.list:
+                    print(colors.list_hexes(device.colorspace))
+            else:
+                await device.set_hex(args.value.lower(), args.transition_time)
+
+    
+
+        if args.command == "list":
+            await console.list_devices(api, gateway, expand_groups=args.expand_groups)
+
+        if args.command == "pair":
+            from ikeatradfri import pair
+
+            shutdown = asyncio.Future()
+            await pair.pair(api_factory, shutdown)
+
+        if args.command == "raw":
+            device = await devices.get_device(api, gateway, args.ID)
+            print(device.raw)
+
+        
+        if args.command == "hsb":
+            device = await devices.get_device(api, gateway, args.ID)
+            await device.set_hsb(
+                int(args.hue) * 65535 / 360,
+                int(args.saturation) * 65279 / 100,
+                args.brightness,
+            )
+
+        if args.command == "rgb":
+            device = await devices.get_device(api, gateway, args.ID)
+            await device.set_rgb(args.red, args.green, args.blue)
+
+        if args.command == "test":
+            device = await devices.get_device(api, gateway, 65551)
+            print(device.hex)
+
+        if args.command == "color":
+            from ikeatradfri import colors
+
+            device = await devices.get_device(api, gateway, args.ID)
+
+            if args.color_command == "list":
+                print(colors.list_hexes(colorspace=device.colorspace, levels=True))
+
+            if args.color_command == "set":
+                device = await devices.get_device(api, gateway, args.ID)
+                await device.set_hex(colors.color(level=args.color, colorspace=device.colorspace)["Hex"])
+    
     except devices.UnsupportedDeviceCommand:
         logging.error(
             "Unsupported command '{0}' for device {1}".format(args.command, args.ID)
         )
+
+    except pyerror.ClientError:
+        logging.critical("Device not found")
+
     except Exception:
         raise
-
-    if args.command == "list":
-        await console.list_devices(api, gateway, expand_groups=args.expand_groups)
-
-    if args.command == "pair":
-        from ikeatradfri import pair
-
-        shutdown = asyncio.Future()
-        await pair.pair(api_factory, shutdown)
-
-    if args.command == "raw":
-        device = await devices.get_device(api, gateway, args.ID)
-        print(device.raw)
-
-    if args.command == "hex":
-        device = await devices.get_device(api, gateway, args.ID)
-        await device.set_hex(args.value)
-
-    if args.command == "hsb":
-        device = await devices.get_device(api, gateway, args.ID)
-        await device.set_hsb(
-            int(args.hue) * 65535 / 360,
-            int(args.saturation) * 65279 / 100,
-            args.brightness,
-        )
-
-    if args.command == "rgb":
-        device = await devices.get_device(api, gateway, args.ID)
-        await device.set_rgb(args.red, args.green, args.blue)
-
-    if args.command == "test":
-        device = await devices.get_device(api, gateway, 65551)
-        print(device.hex)
-
-    if args.command == "color":
-        from ikeatradfri.colors import hex_colors
-
-        if args.color_command == "list":
-            for key, a in hex_colors.items():
-                print("{0}: {1}".format(key, a["Name"]))
-
-        if args.color_command == "set":
-            device = await devices.get_device(api, gateway, args.ID)
-            await device.set_hex(hex_colors[int(args.color)]["Hex"])
 
     await api_factory.shutdown()
 

@@ -277,9 +277,12 @@ async def get_device(api, gateway, id):
     except (error.ClientError, json.decoder.JSONDecodeError):
         # Is it a group?
         members = []
-        targetGroup = await api(gateway.get_group(int(id)))
-        for aMember in targetGroup.members():
-            members.append(ikea_device(await api(aMember), api))
+        try:
+            targetGroup = await api(gateway.get_group(int(id)))
+            for aMember in targetGroup.members():
+                members.append(ikea_device(await api(aMember), api))
+        except(error.ClientError, json.decoder.JSONDecodeError):
+            raise
 
         return ikea_group(targetGroup, members, api)
 

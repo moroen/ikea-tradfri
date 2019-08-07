@@ -86,7 +86,8 @@ def getArgs():
 
     parser_hex = subparsers.add_parser("hex")
     parser_hex.add_argument("ID")
-    parser_hex.add_argument("value")
+    parser_hex.add_argument("value", nargs='?', default="show")
+    parser_hex.add_argument("--list", action="store_true")
     parser_hex.add_argument(
         "--transition-time", nargs="?", default=10, type=int, dest="transition_time"
     )
@@ -109,7 +110,8 @@ def getArgs():
 
     parser_color = subparsers.add_parser("color")
     subparser_color = parser_color.add_subparsers(dest="color_command")
-    subparser_color.add_parser("list")
+    subparser_color.add_parser("list").add_argument("ID")
+
     parser_set_color = subparser_color.add_parser("set")
     parser_set_color.add_argument("ID")
     parser_set_color.add_argument("color")
