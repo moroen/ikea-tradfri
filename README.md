@@ -14,10 +14,10 @@ $ sudo apt install build-essential autoconf
 $ python3 setup.py install
 ```
 
-The script needs the gateway IP and key, this can be set with the config option. This is only needed on first use, run the command from the directory the script is located, and the ini-file will be created:
+The script needs the gateway IP and key, this can be set with the config gateway option. This is only needed on first use.
 
 ```shell
-./tradfri.py config IP KEY
+./tradfri.py config gateway IP KEY
 ```
 
 
