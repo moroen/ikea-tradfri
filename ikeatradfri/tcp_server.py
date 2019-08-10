@@ -6,6 +6,7 @@ import signal
 
 from . import config, devices as Devices, exceptions, signal_handler
 from .server_commands import return_object, connect_to_gateway
+from . import __version__
 
 from pytradfri import error as Error
 
@@ -28,17 +29,19 @@ class tcp_server:
         self._hostConfig = None
 
     async def close_connection(self, writer):
-        logger.info("Closing connection from {}".format(writer.get_extra_info("peername")))
+        logger.info(
+            "Closing connection from {}".format(writer.get_extra_info("peername"))
+        )
         writer.close()
         await writer.wait_closed()
         logger.info("Connection closed")
         return
 
     async def handle_echo(self, reader, writer):
-    
+
         keep_connection = True
         logger.info("Connected from {}".format(writer.get_extra_info("peername")))
-        while keep_connection:  
+        while keep_connection:
 
             data = await reader.readline()
             if data:
@@ -68,7 +71,7 @@ class tcp_server:
 
                     elif command["action"] == "getChanges":
                         returnData = await self.send_changes(command)
-            
+
                     else:
                         returnData = return_object(
                             action=command["action"],
@@ -160,7 +163,9 @@ class tcp_server:
 
     async def set_state(self, command):
         try:
-            device = await Devices.get_device(self._api, self._gateway, command["deviceID"])
+            device = await Devices.get_device(
+                self._api, self._gateway, command["deviceID"]
+            )
             target_state = None
 
             if command["state"] == "On":
@@ -177,15 +182,19 @@ class tcp_server:
 
             devices.append(description)
             return return_object(action="setState", status="Ok", result=devices)
-        
+
         except Error.ServerError:
             return return_object("set_state", status="Error", result="Server error")
 
     async def set_level(self, command):
         try:
-            device = await Devices.get_device(self._api, self._gateway, command["deviceID"])
+            device = await Devices.get_device(
+                self._api, self._gateway, command["deviceID"]
+            )
 
-            await device.set_level(command["level"], transition_time=self._transition_time)
+            await device.set_level(
+                command["level"], transition_time=command["transition_time"]
+            )
 
             devices = []
 
@@ -201,8 +210,12 @@ class tcp_server:
 
     async def set_hex(self, command):
         try:
-            device = await Devices.get_device(self._api, self._gateway, command["deviceID"])
-            await device.set_hex(command["hex"], transition_time=self._transition_time)
+            device = await Devices.get_device(
+                self._api, self._gateway, command["deviceID"]
+            )
+            await device.set_hex(
+                command["hex"], transition_time=command["transition_time"]
+            )
             await device.refresh()
 
             devices = []
@@ -221,7 +234,9 @@ class tcp_server:
 
         addr = self._server.sockets[0].getsockname()
         logger.info(
-            "Starting IKEA-Tradfri TCP server on {0}:{1}".format(addr[0], addr[1])
+            "Starting IKEA-Tradfri TCP server {2} on {0}:{1}".format(
+                addr[0], addr[1], __version__
+            )
         )
 
         # loop.run_until_complete(self._server)

@@ -124,10 +124,11 @@ class ikea_device(object):
         await self.refresh()
 
     async def set_level(self, level, transition_time=10):
+        print(transition_time)
         if self.dimmable:
             await self._api(
                 self._device.light_control.set_dimmer(
-                    int(level), transition_time=transition_time
+                    int(level), transition_time=int(transition_time)
                 )
             )
         else:
@@ -138,10 +139,10 @@ class ikea_device(object):
 
     async def set_hex(self, hex, transition_time=10):
         if self.has_hex:
-            
+
             await self._api(
                 self._device.light_control.set_hex_color(
-                    hex, transition_time=transition_time
+                    hex, transition_time=int(transition_time)
                 )
             )
         else:
@@ -155,7 +156,10 @@ class ikea_device(object):
 
         await self._api(
             self._device.light_control.set_hsb(
-                int(hue), int(saturation), brightness, transition_time=transition_time
+                int(hue),
+                int(saturation),
+                brightness,
+                transition_time=int(transition_time),
             )
         )
 
@@ -214,12 +218,12 @@ class ikea_group(object):
 
     @property
     def colorspace(self):
-        def_colspace="W"
+        def_colspace = "W"
         for aDevice in self._members:
             if aDevice.colorspace == "CWS":
                 return "CWS"
             elif aDevice.colorspace == "WS":
-                def_colspace="WS"
+                def_colspace = "WS"
 
         return def_colspace
 
@@ -249,12 +253,12 @@ class ikea_group(object):
         else:
             await self._api(self._group.set_state(False))
 
-        await self._api(self._group.set_dimmer(level, transition_time))
+        await self._api(self._group.set_dimmer(level, int(transition_time)))
         await sleep(1)
         await self.refresh()
 
     async def set_hex(self, hex, transition_time=10):
-        await self._api(self._group.set_hex_color(hex, transition_time))
+        await self._api(self._group.set_hex_color(hex, int(transition_time)))
         await sleep(1)
         await self.refresh()
 
@@ -281,7 +285,7 @@ async def get_device(api, gateway, id):
             targetGroup = await api(gateway.get_group(int(id)))
             for aMember in targetGroup.members():
                 members.append(ikea_device(await api(aMember), api))
-        except(error.ClientError, json.decoder.JSONDecodeError):
+        except (error.ClientError, json.decoder.JSONDecodeError):
             raise
 
         return ikea_group(targetGroup, members, api)

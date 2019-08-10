@@ -27,7 +27,7 @@ class host_config(object):
             Http_port=8085,
             Identity=None,
             Passkey=None,
-            Transition_time = 10, 
+            Transition_time=10,
             Verbosity=0,
         )
         self.load()
@@ -107,7 +107,7 @@ def handle_config_command(args):
 
 def get_config(args):
     confObj = host_config()
-    
+
     if confObj.gateway is None:
         raise NoGatewaySpecified
 

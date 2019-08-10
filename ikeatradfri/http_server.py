@@ -6,7 +6,7 @@ import logging
 from pytradfri import Gateway
 from pytradfri.api.aiocoap_api import APIFactory
 
-from . import config, exceptions, signal_handler
+from . import config, exceptions, signal_handler, __version__
 from .server_commands import connect_to_gateway
 
 from .routes import routes
@@ -31,8 +31,8 @@ async def start(hostConfig):
         site = web.TCPSite(runner, hostConfig["Server_ip"], hostConfig["Http_port"])
 
         logger.info(
-            "Starting IKEA-Tradfri HTTP server on {0}:{1}".format(
-                hostConfig["Server_ip"], hostConfig["Http_port"]
+            "Starting IKEA-Tradfri HTTP server {2} on {0}:{1}".format(
+                hostConfig["Server_ip"], hostConfig["Http_port"], __version__
             )
         )
         await site.start()

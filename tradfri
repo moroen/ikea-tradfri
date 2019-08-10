@@ -63,13 +63,17 @@ async def run(args):
 
             device = await devices.get_device(api, gateway, args.ID)
             if args.value == "show":
-                print ("Current hex: {} ({}) in colorspace: {}".format(device.hex, colors.color_name_for_hex(device.hex, device.colorspace), device.colorspace))
+                print(
+                    "Current hex: {} ({}) in colorspace: {}".format(
+                        device.hex,
+                        colors.color_name_for_hex(device.hex, device.colorspace),
+                        device.colorspace,
+                    )
+                )
                 if args.list:
                     print(colors.list_hexes(device.colorspace))
             else:
                 await device.set_hex(args.value.lower(), args.transition_time)
-
-    
 
         if args.command == "list":
             await console.list_devices(api, gateway, expand_groups=args.expand_groups)
@@ -84,7 +88,6 @@ async def run(args):
             device = await devices.get_device(api, gateway, args.ID)
             print(device.raw)
 
-        
         if args.command == "hsb":
             device = await devices.get_device(api, gateway, args.ID)
             await device.set_hsb(
@@ -111,8 +114,10 @@ async def run(args):
 
             if args.color_command == "set":
                 device = await devices.get_device(api, gateway, args.ID)
-                await device.set_hex(colors.color(level=args.color, colorspace=device.colorspace)["Hex"])
-    
+                await device.set_hex(
+                    colors.color(level=args.color, colorspace=device.colorspace)["Hex"]
+                )
+
     except devices.UnsupportedDeviceCommand:
         logging.error(
             "Unsupported command '{0}' for device {1}".format(args.command, args.ID)

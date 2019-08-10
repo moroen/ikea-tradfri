@@ -1,8 +1,10 @@
 import argparse, sys
 from . import __version__
 
+
 def get_version():
     return __version__
+
 
 def check_level(value):
     try:
@@ -24,8 +26,6 @@ def getArgs():
 
     subparsers = parser.add_subparsers(dest="command")
     subparsers.required = False
-
-
 
     parser_config = subparsers.add_parser("config")
     parser_config_subparsers = parser_config.add_subparsers(dest="config")
@@ -86,7 +86,7 @@ def getArgs():
 
     parser_hex = subparsers.add_parser("hex")
     parser_hex.add_argument("ID")
-    parser_hex.add_argument("value", nargs='?', default="show")
+    parser_hex.add_argument("value", nargs="?", default="show")
     parser_hex.add_argument("--list", action="store_true")
     parser_hex.add_argument(
         "--transition-time", nargs="?", default=10, type=int, dest="transition_time"

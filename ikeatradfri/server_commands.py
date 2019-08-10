@@ -27,10 +27,11 @@ class return_object:
             return json.dumps({"action": self._action, "status": self._status}).encode(
                 "utf-8"
             )
-    
+
     @property
     def status(self):
         return self._status
+
 
 async def connect_to_gateway(hostConfig):
 

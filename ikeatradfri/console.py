@@ -41,7 +41,7 @@ async def list_devices(api, gateway, expand_groups=False):
                 descript["Name"],
                 descript["State"],
                 descript["Level"],
-                descript["Hex"]
+                descript["Hex"],
             )
         )
         if expand_groups:
