@@ -5,7 +5,11 @@ import signal
 
 
 from . import config, devices as Devices, exceptions, signal_handler
-from .server_commands import return_object, connect_to_gateway
+from .server_commands import (
+    return_object,
+    connect_to_gateway,
+    close_connection_to_gateway,
+)
 from . import __version__
 
 from pytradfri import error as Error
@@ -52,6 +56,10 @@ class tcp_server:
                 if self._hostConfig["Verbosity"] > 1:
                     logger.info("Received {} from {}".format(message, addr))
 
+                self._api, self._gateway, self._api_factory = await connect_to_gateway(
+                    self._hostConfig
+                )
+
                 command = json.loads(message)
                 try:
                     if command["action"] == "initGateway":
@@ -81,6 +89,13 @@ class tcp_server:
                 except OSError:
                     print("Fuck")
 
+                except Error.RequestTimeOut:
+                    logger.error("Request timed out, reopening connection")
+                    await close_connection_to_gateway(self._api_factory)
+                    self._api, self._gateway, self._api_factory = await connect_to_gateway(
+                        self._hostConfig
+                    )
+
                 if self._hostConfig["Verbosity"] > 1:
                     logger.info("Sending: {0}".format(returnData.json))
 
@@ -92,15 +107,17 @@ class tcp_server:
                 writer.write(returnData.json)
                 await writer.drain()
 
+                await close_connection_to_gateway(self._api_factory)
+
             else:
                 await self.close_connection(writer)
                 return
 
     async def init_gateway(self, command):
         try:
-            self._api, self._gateway, self._api_factory = await connect_to_gateway(
-                self._hostConfig
-            )
+            # self._api, self._gateway, self._api_factory = await connect_to_gateway(
+            #    self._hostConfig
+            # )
             return return_object("initGateway", status="Ok")
         except exceptions.ConfigNotFound:
             return return_object(

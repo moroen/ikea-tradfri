@@ -71,3 +71,7 @@ async def serverCommand(request):
         )
     except BaseException:
         raise
+
+
+async def close_connection_to_gateway(api_factory):
+    await api_factory.shutdown()
