@@ -22,7 +22,7 @@ class host_config(object):
         self._confObj.update(
             Server_type="Both",
             Gateway=None,
-            Server_ip="127.0.0.1",
+            Server_ip="0.0.0.0",
             Tcp_port=1234,
             Http_port=8085,
             Identity=None,
