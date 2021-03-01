@@ -1,5 +1,7 @@
 # Python Script for controlling IKEA - Tradfri lights
 
+## Note:
+This has been deprecated and replaced with [Tradfricoap](https://github.com/moroen/tradfricoap). This repository is kept for reference, and will not be further developed.
 
 ## Requirements
 Recommended python version: 3.6.x - 3.7.x, 3.5.3 also supported, but will be deprecated.
